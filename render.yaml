@@ -1,0 +1,13 @@
+# Deployment Configuration for Render
+
+# Set to "True" for production deployments
+# web: gunicorn app:app
+env:
+  PRODUCTION: "True"
+  PYTHON_VERSION: "3.11"
+
+# Build command to install dependencies
+buildCommand: "pip install -r requirements.txt"
+
+# Start command
+startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"

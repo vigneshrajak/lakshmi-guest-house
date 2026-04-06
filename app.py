@@ -530,4 +530,6 @@ def edit_unit(acc_id):
     return redirect(url_for('owner_dashboard'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Debug mode only for development
+    is_production = os.environ.get('PRODUCTION', 'False') == 'True'
+    app.run(debug=not is_production, port=5000)
