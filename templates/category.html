@@ -28,9 +28,16 @@
         </div>
         <div class="card-body">
             <p>{{ acc.description }}</p>
+            {% if acc.max_people %}
+            <div style="padding: 0.75rem; background: rgba(52, 152, 219, 0.1); border-radius: 4px; margin-bottom: 1rem; font-size: 0.95rem; color: #2c3e50;">
+                <strong>Capacity:</strong> Accommodates up to <strong>{{ acc.max_people }}</strong> {{ 'person' if acc.max_people == 1 else 'people' }}
+            </div>
+            {% endif %}
             <div class="price-tag">₹{{ "%.0f"|format(acc.price) }} <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-light);">/ day</span></div>
             {% if acc.is_closed %}
                 <button class="btn" disabled style="background: var(--text-light); cursor: not-allowed; opacity: 0.7;">Currently Unavailable</button>
+            {% elif not acc.is_available_today %}
+                <button class="btn" disabled style="background: var(--text-light); cursor: not-allowed; opacity: 0.7;">Already Booked</button>
             {% else %}
                 <a href="{{ url_for('book', acc_id=acc.id) }}" class="btn">Select & Book</a>
             {% endif %}

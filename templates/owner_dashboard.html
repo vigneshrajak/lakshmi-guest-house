@@ -112,6 +112,7 @@
                     <th style="padding: 1rem;">Unit Name</th>
                     <th style="padding: 1rem;">Type</th>
                     <th style="padding: 1rem;">Price (₹)</th>
+                    <th style="padding: 1rem;">Capacity</th>
                     <th style="padding: 1rem;">Status</th>
                     <th style="padding: 1rem;">Images</th>
                     <th style="padding: 1rem;">Actions</th>
@@ -124,6 +125,7 @@
                         <span id="name_display_{{ acc.id }}">{{ acc.name }}</span>
                         <form id="name_form_{{ acc.id }}" style="display: none; margin-top: 0.5rem;" method="POST" action="{{ url_for('edit_unit', acc_id=acc.id) }}">
                             <input type="hidden" name="price" value="{{ acc.price }}">
+                            <input type="hidden" name="max_people" value="{{ acc.max_people }}">
                             <input type="text" name="name" value="{{ acc.name }}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem;">
                             <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem;">
                                 <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #27ae60; border: none; cursor: pointer; flex: 1;">Save</button>
@@ -136,6 +138,7 @@
                         <span id="price_display_{{ acc.id }}">₹{{ acc.price }}</span>
                         <form id="price_form_{{ acc.id }}" style="display: none; margin-top: 0.5rem;" method="POST" action="{{ url_for('edit_unit', acc_id=acc.id) }}">
                             <input type="hidden" name="name" value="{{ acc.name }}">
+                            <input type="hidden" name="max_people" value="{{ acc.max_people }}">
                             <input type="number" name="price" value="{{ acc.price }}" step="0.01" min="0" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem;">
                             <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem;">
                                 <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #27ae60; border: none; cursor: pointer; flex: 1;">Save</button>
@@ -145,6 +148,18 @@
                     </td>
                     <td style="padding: 1rem; font-weight: bold; color: {{ '#c0392b' if acc.is_closed else '#27ae60' }};">
                         {{ 'Closed' if acc.is_closed else 'Open' }}
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span id="capacity_display_{{ acc.id }}"><strong>{{ acc.max_people }}</strong> {{ 'person' if acc.max_people == 1 else 'people' }}</span>
+                        <form id="capacity_form_{{ acc.id }}" style="display: none; margin-top: 0.5rem;" method="POST" action="{{ url_for('edit_unit', acc_id=acc.id) }}">
+                            <input type="hidden" name="name" value="{{ acc.name }}">
+                            <input type="hidden" name="price" value="{{ acc.price }}">
+                            <input type="number" name="max_people" value="{{ acc.max_people }}" min="1" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem;">
+                            <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem;">
+                                <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #27ae60; border: none; cursor: pointer; flex: 1;">Save</button>
+                                <button type="button" onclick="toggleCapacityEdit({{ acc.id }})" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #95a5a6; border: none; cursor: pointer; flex: 1;">Cancel</button>
+                            </div>
+                        </form>
                     </td>
                     <td style="padding: 1rem;">
                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -166,6 +181,7 @@
                                 <button type="button" onclick="toggleNameEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #3498db; border: none; cursor: pointer; flex: 1;">Edit Name</button>
                                 <button type="button" onclick="togglePriceEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #e67e22; border: none; cursor: pointer; flex: 1;">Edit Price</button>
                             </div>
+                            <button type="button" onclick="toggleCapacityEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #16a085; border: none; cursor: pointer; width: 100%;">Edit Capacity</button>
                             <form method="POST" action="{{ url_for('toggle_unit', id=acc.id) }}" style="margin: 0;">
                                 {% if acc.is_closed %}
                                 <button type="submit" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #27ae60; border: none; cursor: pointer; width: 100%;">Open Unit</button>
@@ -212,6 +228,26 @@
         function togglePriceEdit(accId) {
             const display = document.getElementById('price_display_' + accId);
             const form = document.getElementById('price_form_' + accId);
+            if (form.style.display === 'none') {
+                display.style.display = 'none';
+                form.style.display = 'block';
+            } else {
+                display.style.display = 'inline';
+                form.style.display = 'none';
+            }
+        }
+
+        function toggleCapacityEdit(accId) {
+            const display = document.getElementById('capacity_display_' + accId);
+            const form = document.getElementById('capacity_form_' + accId);
+            if (form.style.display === 'none') {
+                display.style.display = 'none';
+                form.style.display = 'block';
+            } else {
+                display.style.display = 'inline';
+                form.style.display = 'none';
+            }
+        }
             if (form.style.display === 'none') {
                 display.style.display = 'none';
                 form.style.display = 'block';
