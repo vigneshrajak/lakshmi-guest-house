@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Owner Login | Lakshmi Guest House{% endblock %}
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto; background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color);">
+    <h2 style="margin-bottom: 1.5rem; text-align: center;">Owner Login</h2>
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="password" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Password</label>
+            <input type="password" id="password" name="password" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-dark); color: var(--text-primary);">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Login</button>
+    </form>
+</div>
+{% endblock %}

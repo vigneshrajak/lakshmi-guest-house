@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Home | Lakshmi Guest House{% endblock %}
+{% block content %}
+<div class="hero">
+    <h1>Experience Comfort & Serenity</h1>
+    <p>Select a category to view all of our available units.</p>
+</div>
+
+<div class="accommodations-grid">
+    {% for cat in categories %}
+    <div class="card">
+        <div class="card-image-wrapper">
+            <img src="{{ url_for('static', filename='images/' ~ cat.image_filename) }}" alt="{{ cat.name }}" class="card-image">
+        </div>
+        <div class="card-header">
+            <h2 class="card-title">{{ cat.name }}s</h2>
+            {% if cat.available > 0 %}
+                <span class="card-badge available-badge">Available: {{ cat.available }}</span>
+            {% else %}
+                <span class="card-badge unavailable-badge">Sold Out</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <p>{{ cat.description }}</p>
+            <a href="{{ url_for('category_view', acc_type=cat.name) }}" class="btn">View All {{ cat.name }}s</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<section class="about-section" style="margin-top: 4rem; margin-bottom: 2rem; padding: 2.5rem; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <div class="about-content" style="flex: 1; min-width: 300px;">
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">About Lakshmi Guest House</h2>
+        <p style="margin-bottom: 0.8rem; font-size: 1.1rem;"><strong>Owner:</strong> Kalyanaraman P</p>
+        <p style="margin-bottom: 0.8rem; font-size: 1.1rem;"><strong>Legacy:</strong> Proudly serving guests for the past 24 years</p>
+        <p style="margin-bottom: 0.8rem; font-size: 1.1rem;"><strong>Location:</strong> Walkable distance to the temple</p>
+        <p style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-light); line-height: 1.6;">
+            <strong>Address:</strong><br>
+            20, East Street,<br>
+            Opposite to Brahma theertham,<br>
+            Thirunallar - 609602
+        </p>
+        <a href="https://maps.app.goo.gl/F5P6eQfZbTPS1Fn68" target="_blank" class="btn" style="display: inline-block; background: #4285F4; border: none; font-weight: 600;">View Route on Google Maps</a>
+    </div>
+    <div class="about-image" style="flex: 1; min-width: 300px; text-align: center;">
+        <img src="{{ url_for('static', filename='images/route_map.png') }}" alt="Walking route to temple" style="max-width: 100%; border-radius: 12px; border: 2px solid var(--border-color); box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+        <p style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-light); font-style: italic;">Just a 3-minute beautiful walk to Sanishwaran Temple</p>
+    </div>
+</section>
+{% endblock %}

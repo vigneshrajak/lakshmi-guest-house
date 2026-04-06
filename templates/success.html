@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Booking Successful | Lakshmi Guest House{% endblock %}
+{% block content %}
+<div class="success-container">
+    <div class="success-icon" style="background-color: #f39c12;">⏱</div>
+    <h2>Booking Request Received</h2>
+    <p style="color: var(--text-light); margin-bottom: 1.5rem; font-size: 1.125rem;">
+        Thank you, <strong>{{ name }}</strong>. Your request for {{ acc_type }} has been submitted.
+    </p>
+    
+    <div style="background-color: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); text-align: left;">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Action Required: Pending Payment</h3>
+        <p style="margin-bottom: 1rem;">To confirm your booking, please GPay the advance amount to the owner within the next 24 hours.</p>
+        
+        <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem;">
+            <li style="margin-bottom: 0.75rem;"><strong>GPay Phone Number:</strong> <span style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color);">8754170241</span></li>
+            <li style="margin-bottom: 0.75rem;"><strong>Advance Amount:</strong> ₹{{ advance }}</li>
+            <li style="margin-bottom: 0.75rem;"><strong>Booking Reference:</strong> <span style="font-family: monospace; font-size: 1.2rem; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">{{ ref }}</span></li>
+        </ul>
+        
+        <p style="font-size: 0.9rem; color: #e74c3c; margin-top: 1rem;">Important: Please include your Booking Reference (<b>{{ ref }}</b>) in the GPay remark. Your booking will only be confirmed after the owner approves the payment.</p>
+    </div>
+
+    <a href="{{ url_for('index') }}" class="btn">Return Home</a>
+</div>
+{% endblock %}

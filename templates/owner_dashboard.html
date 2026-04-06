@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Owner Dashboard | Lakshmi Guest House{% endblock %}
+{% block content %}
+<div class="dashboard-container" style="max-width: 1000px; margin: 2rem auto; padding: 0 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Owner Dashboard</h2>
+        <div>
+            <span style="background: var(--primary-color); padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; margin-right: 1rem;">
+                Balance: ₹{{ earnings }}
+            </span>
+            <a href="{{ url_for('logout') }}" class="btn" style="background: transparent; border: 1px solid var(--border-color);">Logout</a>
+        </div>
+    </div>
+
+    <!-- PENDING BOOKINGS -->
+    <h3 style="margin-bottom: 1rem; color: #f39c12;">Pending Approvals ({{ pending|length }})</h3>
+    <div style="background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
+                    <th style="padding: 1rem;">Ref</th>
+                    <th style="padding: 1rem;">Guest</th>
+                    <th style="padding: 1rem;">Unit</th>
+                    <th style="padding: 1rem;">Dates</th>
+                    <th style="padding: 1rem;">Advance</th>
+                    <th style="padding: 1rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in pending %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1rem; font-family: monospace;">{{ b.booking_ref }}</td>
+                    <td style="padding: 1rem;">{{ b.guest_name }}<br><small style="color: var(--text-light);">{{ b.email }}</small></td>
+                    <td style="padding: 1rem;">{{ b.accommodation.name }}</td>
+                    <td style="padding: 1rem;">{{ b.check_in.strftime('%d %b') }} to {{ b.check_out.strftime('%d %b') }}</td>
+                    <td style="padding: 1rem;">₹{{ b.advance_amount }}</td>
+                    <td style="padding: 1rem; display: flex; gap: 0.5rem;">
+                        <form method="POST" action="{{ url_for('approve_booking', id=b.id) }}">
+                            <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #27ae60; border: none; cursor: pointer;">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_booking', id=b.id) }}">
+                            <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #c0392b; border: none; cursor: pointer;">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-light);">No pending bookings.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- APPROVED BOOKINGS -->
+    <h3 style="margin-bottom: 1rem; color: #27ae60;">Approved Bookings ({{ approved|length }})</h3>
+    <div style="background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
+                    <th style="padding: 1rem;">Ref</th>
+                    <th style="padding: 1rem;">Guest</th>
+                    <th style="padding: 1rem;">Unit</th>
+                    <th style="padding: 1rem;">Dates</th>
+                    <th style="padding: 1rem;">Advance Paid</th>
+                    <th style="padding: 1rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in approved %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1rem; font-family: monospace;">{{ b.booking_ref }}</td>
+                    <td style="padding: 1rem;">{{ b.guest_name }}<br><small style="color: var(--text-light);">{{ b.email }}</small></td>
+                    <td style="padding: 1rem;">{{ b.accommodation.name }}</td>
+                    <td style="padding: 1rem;">{{ b.check_in.strftime('%d %b %Y') }} to {{ b.check_out.strftime('%d %b %Y') }}</td>
+                    <td style="padding: 1rem; color: #27ae60; font-weight: bold;">₹{{ b.advance_amount }}</td>
+                    <td style="padding: 1rem;">
+                        <form method="POST" action="{{ url_for('cancel_booking', id=b.id) }}" onsubmit="return confirm('Are you sure you want to reopen this room? This will cancel the booking.');">
+                            <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e67e22; border: none; cursor: pointer;">Reopen Room</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-light);">No approved bookings yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- REJECTED BOOKINGS -->
+    <details style="margin-bottom: 2rem;">
+        <summary style="cursor: pointer; padding: 1rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-light); font-weight: bold;">
+            Show Rejected Bookings ({{ rejected|length }})
+        </summary>
+        <div style="background: var(--card-bg); padding: 1rem; border-radius: 0 0 8px 8px; border: 1px solid var(--border-color); border-top: none; max-height: 300px; overflow-y: auto;">
+            <ul style="list-style: none; padding: 0;">
+                {% for b in rejected %}
+                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="font-family: monospace; color: #c0392b;">{{ b.booking_ref }}</span> - <strong>{{ b.guest_name }}</strong> for {{ b.accommodation.name }} ({{ b.check_in.strftime('%d %b') }} - {{ b.check_out.strftime('%d %b') }})
+                </li>
+                {% else %}
+                <li style="color: var(--text-light); font-style: italic;">No rejected bookings.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </details>
+
+    <!-- UNIT MANAGEMENT -->
+    <h3 style="margin-bottom: 1rem; color: #8e44ad;">Unit Management</h3>
+    <div style="background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
+                    <th style="padding: 1rem;">Unit Name</th>
+                    <th style="padding: 1rem;">Type</th>
+                    <th style="padding: 1rem;">Status</th>
+                    <th style="padding: 1rem;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in accommodations %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1rem;">{{ acc.name }}</td>
+                    <td style="padding: 1rem;">{{ acc.type }}</td>
+                    <td style="padding: 1rem; font-weight: bold; color: {{ '#c0392b' if acc.is_closed else '#27ae60' }};">
+                        {{ 'Closed' if acc.is_closed else 'Open' }}
+                    </td>
+                    <td style="padding: 1rem;">
+                        <form method="POST" action="{{ url_for('toggle_unit', id=acc.id) }}">
+                            {% if acc.is_closed %}
+                            <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #27ae60; border: none; cursor: pointer;">Open Unit</button>
+                            {% else %}
+                            <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #c0392b; border: none; cursor: pointer;">Close Unit</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Book {{ accommodation.name }} | Lakshmi Guest House{% endblock %}
+{% block content %}
+<div class="form-container" style="max-width: 800px;">
+    <h2>Book {{ accommodation.name }}</h2>
+    <div style="font-weight: bold; font-size: 1.25rem; color: var(--primary-color); margin-bottom: 1rem;">Price: ₹{{ "%.0f"|format(accommodation.price) }} / day</div>
+    
+    <!-- Image Gallery -->
+    <div style="display: flex; gap: 1rem; overflow-x: auto; margin-bottom: 2rem; padding-bottom: 0.5rem;">
+        {% for img in accommodation.image_filenames.split(',') %}
+        <img src="{{ url_for('static', filename='images/' ~ img) }}" alt="{{ accommodation.name }}" style="height: 200px; border-radius: 8px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        {% endfor %}
+    </div>
+
+    <p style="color: var(--text-light); margin-bottom: 2rem;">Fill out the details below to secure your {{ accommodation.type }}.</p>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" required placeholder="John Doe">
+        </div>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="john@example.com">
+        </div>
+        <div class="date-group">
+            <div class="form-group">
+                <label for="check_in">Check-in Date</label>
+                <input type="date" id="check_in" name="check_in" required>
+            </div>
+            <div class="form-group">
+                <label for="check_out">Check-out Date</label>
+                <input type="date" id="check_out" name="check_out" required>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn" style="flex: 1;">Confirm Booking</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Simple script to set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('check_in').setAttribute('min', today);
+    document.getElementById('check_out').setAttribute('min', today);
+    
+    document.getElementById('check_in').addEventListener('change', function() {
+        document.getElementById('check_out').setAttribute('min', this.value);
+    });
+</script>
+{% endblock %}
