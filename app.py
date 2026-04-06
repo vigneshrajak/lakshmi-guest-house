@@ -9,7 +9,6 @@ from email.mime.multipart import MIMEMultipart
 from functools import wraps
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
-from PIL import Image
 
 load_dotenv() # Load variables from .env if present
 
@@ -40,24 +39,20 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_and_optimize_image(file, acc_id):
-    """Save and optimize uploaded image"""
+    """Save uploaded image without optimization"""
     if not file or file.filename == '':
         return None
     
     if not allowed_file(file.filename):
         return None
     
-    filename = f"acc_{acc_id}_{secrets.token_hex(4)}.jpg"
+    # Get file extension
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    filename = f"acc_{acc_id}_{secrets.token_hex(4)}.{ext}"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
-    # Open and optimize image
-    img = Image.open(file)
-    # Convert to RGB if needed (for PNG with transparency)
-    if img.mode in ('RGBA', 'LA', 'P'):
-        img = img.convert('RGB')
-    # Resize to max width of 800px while maintaining aspect ratio
-    img.thumbnail((800, 800), Image.Resampling.LANCZOS)
-    img.save(filepath, 'JPEG', quality=85)
+    # Save file directly without optimization
+    file.save(filepath)
     
     return filename
 
