@@ -165,24 +165,24 @@ with app.app_context():
     if not Accommodation.query.first():
         inventory = [
             # 4 Halls
-            Accommodation(name='Grand Plaza Hall', type='Hall', description='Our largest hall suitable for weddings and massive gatherings.', price=25000.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=500),
-            Accommodation(name='Lotus Banquet Hall', type='Hall', description='Elegant hall perfect for formal events and corporate dinners.', price=20000.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=300),
-            Accommodation(name='Rose Mini Hall', type='Hall', description='Cozy indoor hall for birthdays and small celebrations.', price=15000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=100),
-            Accommodation(name='Open Air Garden Hall', type='Hall', description='Beautiful outdoor lawn that can be covered for evening functions.', price=18000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=250),
+            Accommodation(name='Hall 1', type='Hall', description='Our largest hall suitable for weddings and massive gatherings.', price=25000.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=500),
+            Accommodation(name='Hall 2', type='Hall', description='Elegant hall perfect for formal events and corporate dinners.', price=20000.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=300),
+            Accommodation(name='Hall 3', type='Hall', description='Cozy indoor hall for birthdays and small celebrations.', price=15000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=100),
+            Accommodation(name='Hall 4', type='Hall', description='Beautiful outdoor lawn that can be covered for evening functions.', price=18000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=250),
             
             # 2 Cottages
-            Accommodation(name='Honeymoon Suite Cottage', type='Cottage', description='A private and fully furnished cottage explicitly designed for couples.', price=5000.0, image_filenames='sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg', max_people=2),
-            Accommodation(name='Family Villa Cottage', type='Cottage', description='A large cottage featuring two bedrooms, private kitchen, and living room.', price=7500.0, image_filenames='sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg', max_people=6),
+            Accommodation(name='Cottage 1', type='Cottage', description='A private and fully furnished cottage explicitly designed for couples.', price=5000.0, image_filenames='sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg', max_people=2),
+            Accommodation(name='Cottage 2', type='Cottage', description='A large cottage featuring two bedrooms, private kitchen, and living room.', price=7500.0, image_filenames='sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg', max_people=6),
             
             # 8 Rooms
-            Accommodation(name='Room 101 (Classic Single)', type='Room', description='Compact and comfortable single room.', price=1500.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=1),
-            Accommodation(name='Room 102 (Classic Double)', type='Room', description='Standard double bed room with basic amenities.', price=2000.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=2),
-            Accommodation(name='Room 103 (Deluxe Double)', type='Room', description='Spacious double room with balcony view.', price=2500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2),
-            Accommodation(name='Room 104 (Executive AC)', type='Room', description='Premium executive room with central air conditioning.', price=3000.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2),
-            Accommodation(name='Room 201 (Family Suite)', type='Room', description='Large suite with one double bed and two twin beds.', price=4500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=4),
-            Accommodation(name='Room 202 (Premium AC)', type='Room', description='Luxury premium room with minibar and attached lounge.', price=3500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2),
-            Accommodation(name='Room 203 (Standard AC)', type='Room', description='Simple AC room perfect for short stays.', price=2200.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=2),
-            Accommodation(name='Room 204 (Budget Non-AC)', type='Room', description='Economical choice without AC but excellent ventilation.', price=1000.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=1),
+            Accommodation(name='Room 1', type='Room', description='Compact and comfortable single room.', price=1500.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=1),
+            Accommodation(name='Room 2', type='Room', description='Standard double bed room with basic amenities.', price=2000.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=2),
+            Accommodation(name='Room 3', type='Room', description='Spacious double room with balcony view.', price=2500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2),
+            Accommodation(name='Room 4', type='Room', description='Premium executive room with central air conditioning.', price=3000.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2),
+            Accommodation(name='Room 5', type='Room', description='Large suite with one double bed and two twin beds.', price=4500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=4),
+            Accommodation(name='Room 6', type='Room', description='Luxury premium room with minibar and attached lounge.', price=3500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2),
+            Accommodation(name='Room 7', type='Room', description='Simple AC room perfect for short stays.', price=2200.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=2),
+            Accommodation(name='Room 8', type='Room', description='Economical choice without AC but excellent ventilation.', price=1000.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=1),
         ]
         db.session.add_all(inventory)
         db.session.commit()
