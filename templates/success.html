@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Booking Successful | Lakshmi Guest House{% endblock %}
+{% block title %}Booking Request Submitted | Lakshmi Guest House{% endblock %}
 {% block content %}
 <div class="success-container">
     <div class="success-icon" style="background-color: #f39c12;">⏱</div>
@@ -8,19 +8,93 @@
         Thank you, <strong>{{ name }}</strong>. Your request for {{ acc_type }} has been submitted.
     </p>
     
+    <!-- Booking Details -->
     <div style="background-color: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); text-align: left;">
-        <h3 style="margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Action Required: Pending Payment</h3>
-        <p style="margin-bottom: 1rem;">To confirm your booking, please GPay the advance amount to the owner within the next 24 hours.</p>
-        
-        <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem;">
-            <li style="margin-bottom: 0.75rem;"><strong>GPay Phone Number:</strong> <span style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color);">9894081508</span></li>
-            <li style="margin-bottom: 0.75rem;"><strong>Advance Amount:</strong> ₹{{ advance }}</li>
-            <li style="margin-bottom: 0.75rem;"><strong>Booking Reference:</strong> <span style="font-family: monospace; font-size: 1.2rem; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">{{ ref }}</span></li>
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Your Booking Details</h3>
+        <ul style="list-style: none; padding: 0;">
+            <li style="margin-bottom: 0.75rem;"><strong>Name:</strong> {{ name }}</li>
+            <li style="margin-bottom: 0.75rem;"><strong>Phone:</strong> {{ phone }}</li>
+            <li style="margin-bottom: 0.75rem;"><strong>Email:</strong> {{ email }}</li>
+            <li style="margin-bottom: 0.75rem;"><strong>Room/Hall:</strong> {{ acc_type }}</li>
+            <li style="margin-bottom: 0.75rem;"><strong>Check-in:</strong> {{ check_in }}</li>
+            <li style="margin-bottom: 0.75rem;"><strong>Check-out:</strong> {{ check_out }}</li>
+            <li style="margin-bottom: 0;"><strong>Booking Reference:</strong> <span style="font-family: monospace; font-size: 1.1rem; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">{{ ref }}</span></li>
         </ul>
+    </div>
+
+    <!-- Approval Process -->
+    <div style="background-color: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); text-align: left;">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">📋 Approval Process Explained</h3>
         
-        <p style="font-size: 0.9rem; color: #e74c3c; margin-top: 1rem;">Important: Please include your Booking Reference (<b>{{ ref }}</b>) in the GPay remark. Your booking will only be confirmed after the owner approves the payment.</p>
+        <div style="margin-bottom: 1.5rem;">
+            <h4 style="color: #3498db; margin-bottom: 0.75rem;">Step 1: Payment of Advance (Your Responsibility)</h4>
+            <p style="margin-bottom: 0.5rem; color: var(--text-light);">You need to send the advance amount via GPay to secure your booking. Without the payment, your booking cannot be approved.</p>
+            <ul style="margin-left: 1.5rem; color: var(--text-light);">
+                <li>Advance Amount Required: <strong style="color: var(--primary-color);">₹{{ advance }}</strong></li>
+                <li>Payment Method: <strong>GPay</strong></li>
+                <li>Phone Number: <strong style="color: var(--primary-color);">9894081508</strong></li>
+                <li><strong style="color: #e74c3c;">Important:</strong> Mention your Booking Ref "<strong>{{ ref }}</strong>" in the payment remark</li>
+            </ul>
+        </div>
+
+        <div>
+            <h4 style="color: #2ecc71; margin-bottom: 0.75rem;">Step 2: Owner Approval & Confirmation</h4>
+            <p style="margin-bottom: 0.5rem; color: var(--text-light);">Once you submit the payment, our owner will review and verify your booking. <strong style="color: #27ae60;">The booking will be approved within 10 minutes</strong> if the payment is verified.</p>
+            <p style="margin-bottom: 0.5rem; color: var(--text-light);">You will receive a <strong>confirmation email</strong> at <strong style="color: var(--primary-color);">{{ email }}</strong> with all the booking details including:</p>
+            <ul style="margin-left: 1.5rem; color: var(--text-light);">
+                <li>Confirmed booking dates</li>
+                <li>Check-in and check-out times</li>
+                <li>Room/Hall specifications and amenities</li>
+                <li>Contact information for the guest house</li>
+                <li>Important instructions and house rules</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Important Notes -->
+    <div style="background-color: #fff3cd; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #f39c12; text-align: left;">
+        <h4 style="color: #f39c12; margin-top: 0;">⚠️ Important Notes</h4>
+        <ul style="margin: 1rem 0 0 1.5rem; color: #555;">
+            <li style="margin-bottom: 0.5rem;">Your booking is <strong>NOT confirmed</strong> until the owner approves it</li>
+            <li style="margin-bottom: 0.5rem;">Check your email (<strong>{{ email }}</strong>) regularly for the approval confirmation</li>
+            <li style="margin-bottom: 0.5rem;">If you don't receive confirmation within 48 hours, contact the owner at <strong>9894081508</strong></li>
+            <li style="margin-bottom: 0.5rem;">Keep your Booking Reference <strong>{{ ref }}</strong> handy for all communications</li>
+        </ul>
     </div>
 
     <a href="{{ url_for('index') }}" class="btn">Return Home</a>
 </div>
+
+<style>
+    .success-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+    
+    .success-container h2 {
+        text-align: center;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+    }
+    
+    ul li {
+        line-height: 1.6;
+    }
+    
+    h4 {
+        margin-bottom: 0.5rem;
+    }
+</style>
 {% endblock %}

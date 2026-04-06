@@ -20,6 +20,7 @@
                 <tr style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
                     <th style="padding: 1rem;">Ref</th>
                     <th style="padding: 1rem;">Guest</th>
+                    <th style="padding: 1rem;">Phone</th>
                     <th style="padding: 1rem;">Unit</th>
                     <th style="padding: 1rem;">Dates</th>
                     <th style="padding: 1rem;">Advance</th>
@@ -31,6 +32,7 @@
                 <tr style="border-bottom: 1px solid var(--border-color);">
                     <td style="padding: 1rem; font-family: monospace;">{{ b.booking_ref }}</td>
                     <td style="padding: 1rem;">{{ b.guest_name }}<br><small style="color: var(--text-light);">{{ b.email }}</small></td>
+                    <td style="padding: 1rem;"><a href="tel:{{ b.phone }}" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">{{ b.phone }}</a></td>
                     <td style="padding: 1rem;">{{ b.accommodation.name }}</td>
                     <td style="padding: 1rem;">{{ b.check_in.strftime('%d %b') }} to {{ b.check_out.strftime('%d %b') }}</td>
                     <td style="padding: 1rem;">₹{{ b.advance_amount }}</td>
@@ -44,7 +46,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-light);">No pending bookings.</td></tr>
+                <tr><td colspan="7" style="padding: 1rem; text-align: center; color: var(--text-light);">No pending bookings.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -58,6 +60,7 @@
                 <tr style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
                     <th style="padding: 1rem;">Ref</th>
                     <th style="padding: 1rem;">Guest</th>
+                    <th style="padding: 1rem;">Phone</th>
                     <th style="padding: 1rem;">Unit</th>
                     <th style="padding: 1rem;">Dates</th>
                     <th style="padding: 1rem;">Advance Paid</th>
@@ -69,6 +72,7 @@
                 <tr style="border-bottom: 1px solid var(--border-color);">
                     <td style="padding: 1rem; font-family: monospace;">{{ b.booking_ref }}</td>
                     <td style="padding: 1rem;">{{ b.guest_name }}<br><small style="color: var(--text-light);">{{ b.email }}</small></td>
+                    <td style="padding: 1rem;"><a href="tel:{{ b.phone }}" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">{{ b.phone }}</a></td>
                     <td style="padding: 1rem;">{{ b.accommodation.name }}</td>
                     <td style="padding: 1rem;">{{ b.check_in.strftime('%d %b %Y') }} to {{ b.check_out.strftime('%d %b %Y') }}</td>
                     <td style="padding: 1rem; color: #27ae60; font-weight: bold;">₹{{ b.advance_amount }}</td>
@@ -79,7 +83,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="6" style="padding: 1rem; text-align: center; color: var(--text-light);">No approved bookings yet.</td></tr>
+                <tr><td colspan="7" style="padding: 1rem; text-align: center; color: var(--text-light);">No approved bookings yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -113,6 +117,7 @@
                     <th style="padding: 1rem;">Type</th>
                     <th style="padding: 1rem;">Price (₹)</th>
                     <th style="padding: 1rem;">Capacity</th>
+                    <th style="padding: 1rem;">Facilities</th>
                     <th style="padding: 1rem;">Status</th>
                     <th style="padding: 1rem;">Images</th>
                     <th style="padding: 1rem;">Actions</th>
@@ -159,6 +164,23 @@
                                 <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #27ae60; border: none; cursor: pointer; flex: 1;">Save</button>
                                 <button type="button" onclick="toggleCapacityEdit({{ acc.id }})" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #95a5a6; border: none; cursor: pointer; flex: 1;">Cancel</button>
                             </div>
+                        </form>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <form method="POST" action="{{ url_for('update_facilities', acc_id=acc.id) }}" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                                <input type="checkbox" name="ac" value="1" {% if acc.facilities and 'AC' in acc.facilities %}checked{% endif %} style="cursor: pointer;">
+                                AC
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                                <input type="checkbox" name="tv" value="1" {% if acc.facilities and 'TV' in acc.facilities %}checked{% endif %} style="cursor: pointer;">
+                                TV
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                                <input type="checkbox" name="heater" value="1" {% if acc.facilities and 'Heater' in acc.facilities %}checked{% endif %} style="cursor: pointer;">
+                                Heater
+                            </label>
+                            <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #16a085; border: none; cursor: pointer; width: 100%; margin-top: 0.5rem;">Update</button>
                         </form>
                     </td>
                     <td style="padding: 1rem;">
@@ -240,14 +262,6 @@
         function toggleCapacityEdit(accId) {
             const display = document.getElementById('capacity_display_' + accId);
             const form = document.getElementById('capacity_form_' + accId);
-            if (form.style.display === 'none') {
-                display.style.display = 'none';
-                form.style.display = 'block';
-            } else {
-                display.style.display = 'inline';
-                form.style.display = 'none';
-            }
-        }
             if (form.style.display === 'none') {
                 display.style.display = 'none';
                 form.style.display = 'block';

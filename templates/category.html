@@ -33,6 +33,16 @@
                 <strong>Capacity:</strong> Accommodates up to <strong>{{ acc.max_people }}</strong> {{ 'person' if acc.max_people == 1 else 'people' }}
             </div>
             {% endif %}
+            {% if acc.facilities %}
+            <div style="padding: 0.75rem; background: rgba(46, 204, 113, 0.1); border-radius: 4px; margin-bottom: 1rem; font-size: 0.95rem; color: #27ae60;">
+                <strong>Facilities:</strong>
+                <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                    {% if 'AC' in acc.facilities %}<span style="background: #27ae60; color: white; padding: 0.3rem 0.6rem; border-radius: 3px; font-size: 0.85rem;">❄️ AC</span>{% endif %}
+                    {% if 'TV' in acc.facilities %}<span style="background: #27ae60; color: white; padding: 0.3rem 0.6rem; border-radius: 3px; font-size: 0.85rem;">📺 TV</span>{% endif %}
+                    {% if 'Heater' in acc.facilities %}<span style="background: #27ae60; color: white; padding: 0.3rem 0.6rem; border-radius: 3px; font-size: 0.85rem;">🔥 Heater</span>{% endif %}
+                </div>
+            </div>
+            {% endif %}
             <div class="price-tag">₹{{ "%.0f"|format(acc.price) }} <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-light);">/ day</span></div>
             {% if acc.is_closed %}
                 <button class="btn" disabled style="background: var(--text-light); cursor: not-allowed; opacity: 0.7;">Currently Unavailable</button>

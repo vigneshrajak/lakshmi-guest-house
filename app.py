@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from functools import wraps
 from dotenv import load_dotenv
+import uuid
 from werkzeug.utils import secure_filename
 
 load_dotenv() # Load variables from .env if present
@@ -137,19 +138,21 @@ Lakshmi Guest House Management
 # --- Models ---
 class Accommodation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False) # e.g. "Room 101", "Grand Hall"
+    name = db.Column(db.String(100), nullable=False) # e.g. "Room 1", "Hall 1"
     type = db.Column(db.String(50), nullable=False)  # Hall, Cottage, Room
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Float, nullable=False)
     image_filenames = db.Column(db.Text, nullable=True)
     is_closed = db.Column(db.Boolean, default=False)
     max_people = db.Column(db.Integer, default=1)  # Number of people accommodation
+    facilities = db.Column(db.Text, nullable=True)  # Comma-separated: AC,TV,Heater
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     accommodation_id = db.Column(db.Integer, db.ForeignKey('accommodation.id'), nullable=False)
     guest_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
     check_in = db.Column(db.Date, nullable=False)
     check_out = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
@@ -252,6 +255,7 @@ def book(acc_id):
     if request.method == 'POST':
         guest_name = request.form.get('name')
         email = request.form.get('email')
+        phone = request.form.get('phone')
         check_in_str = request.form.get('check_in')
         check_out_str = request.form.get('check_out')
 
@@ -284,7 +288,14 @@ def book(acc_id):
                 flash(f"Sorry, {accommodation.name} is already booked for these dates.", "error")
                 return redirect(url_for('book', acc_id=acc_id))
 
-            ref = secrets.token_hex(4).upper()
+            # Generate simple booking reference: Room1, Hall1, Cottage1 format with short UUID suffix for uniqueness
+            # Count bookings with same accommodation type to get sequential number
+            same_type_count = Booking.query.join(Accommodation).filter(
+                Accommodation.type == accommodation.type
+            ).count() + 1
+            # Add 4-char short UUID suffix to ensure uniqueness across all bookings
+            short_id = str(uuid.uuid4())[:4].upper()
+            ref = f"{accommodation.type.replace(' ', '')}{same_type_count}-{short_id}"
             stay_days = (check_out - check_in).days
             advance = (accommodation.price * stay_days) * 0.30  # 30% advance of total cost
 
@@ -292,6 +303,7 @@ def book(acc_id):
                 accommodation_id=acc_id,
                 guest_name=guest_name,
                 email=email,
+                phone=phone,
                 check_in=check_in,
                 check_out=check_out,
                 booking_ref=ref,
@@ -301,7 +313,7 @@ def book(acc_id):
             db.session.add(new_booking)
             db.session.commit()
             
-            return redirect(url_for('success', name=guest_name, type=accommodation.name, ref=ref, advance=advance))
+            return redirect(url_for('success', name=guest_name, type=accommodation.name, ref=ref, advance=advance, phone=phone, email=email, check_in=check_in_str, check_out=check_out_str))
             
         except ValueError:
             flash("Invalid date format.", "error")
@@ -315,7 +327,11 @@ def success():
     acc_type = request.args.get('type', 'Accommodation')
     ref = request.args.get('ref', 'UNKNOWN')
     advance = request.args.get('advance', '0.0')
-    return render_template('success.html', name=name, acc_type=acc_type, ref=ref, advance=advance)
+    phone = request.args.get('phone', '')
+    email = request.args.get('email', '')
+    check_in = request.args.get('check_in', '')
+    check_out = request.args.get('check_out', '')
+    return render_template('success.html', name=name, acc_type=acc_type, ref=ref, advance=advance, phone=phone, email=email, check_in=check_in, check_out=check_out)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -534,6 +550,28 @@ def edit_unit(acc_id):
     db.session.commit()
     
     flash(f'Room updated: {name} - ₹{price} (Capacity: {max_people})', 'success')
+    return redirect(url_for('owner_dashboard'))
+
+@app.route('/owner/update_facilities/<int:acc_id>', methods=['POST'])
+@login_required
+def update_facilities(acc_id):
+    accommodation = Accommodation.query.get_or_404(acc_id)
+    
+    # Get checked facilities
+    facilities = []
+    if request.form.get('ac'):
+        facilities.append('AC')
+    if request.form.get('tv'):
+        facilities.append('TV')
+    if request.form.get('heater'):
+        facilities.append('Heater')
+    
+    # Store as comma-separated string
+    accommodation.facilities = ','.join(facilities) if facilities else None
+    db.session.commit()
+    
+    facility_text = ', '.join(facilities) if facilities else 'None'
+    flash(f'Facilities updated for {accommodation.name}: {facility_text}', 'success')
     return redirect(url_for('owner_dashboard'))
 
 if __name__ == '__main__':
