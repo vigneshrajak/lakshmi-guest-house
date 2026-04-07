@@ -127,16 +127,7 @@
                 {% for acc in accommodations %}
                 <tr style="border-bottom: 1px solid var(--border-color);" id="row_{{ acc.id }}">
                     <td style="padding: 1rem;">
-                        <span id="name_display_{{ acc.id }}">{{ acc.name }}</span>
-                        <form id="name_form_{{ acc.id }}" style="display: none; margin-top: 0.5rem;" method="POST" action="{{ url_for('edit_unit', acc_id=acc.id) }}">
-                            <input type="hidden" name="price" value="{{ acc.price }}">
-                            <input type="hidden" name="max_people" value="{{ acc.max_people }}">
-                            <input type="text" name="name" value="{{ acc.name }}" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem;">
-                            <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem;">
-                                <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #27ae60; border: none; cursor: pointer; flex: 1;">Save</button>
-                                <button type="button" onclick="toggleNameEdit({{ acc.id }})" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #95a5a6; border: none; cursor: pointer; flex: 1;">Cancel</button>
-                            </div>
-                        </form>
+                        {{ acc.name }}
                     </td>
                     <td style="padding: 1rem;">{{ acc.type }}</td>
                     <td style="padding: 1rem;">
@@ -155,16 +146,7 @@
                         {{ 'Closed' if acc.is_closed else 'Open' }}
                     </td>
                     <td style="padding: 1rem;">
-                        <span id="capacity_display_{{ acc.id }}"><strong>{{ acc.max_people }}</strong> {{ 'person' if acc.max_people == 1 else 'people' }}</span>
-                        <form id="capacity_form_{{ acc.id }}" style="display: none; margin-top: 0.5rem;" method="POST" action="{{ url_for('edit_unit', acc_id=acc.id) }}">
-                            <input type="hidden" name="name" value="{{ acc.name }}">
-                            <input type="hidden" name="price" value="{{ acc.price }}">
-                            <input type="number" name="max_people" value="{{ acc.max_people }}" min="1" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem;">
-                            <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem;">
-                                <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #27ae60; border: none; cursor: pointer; flex: 1;">Save</button>
-                                <button type="button" onclick="toggleCapacityEdit({{ acc.id }})" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #95a5a6; border: none; cursor: pointer; flex: 1;">Cancel</button>
-                            </div>
-                        </form>
+                        <strong>{{ acc.max_people }}</strong> {{ 'person' if acc.max_people == 1 else 'people' }}
                     </td>
                     <td style="padding: 1rem;">
                         {% if acc.facilities %}
@@ -181,11 +163,8 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                             {% if acc.image_filenames %}
                                 {% for img in acc.image_filenames.split(',') %}
-                                <div style="position: relative; width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);">
+                                <div style="width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);">
                                     <img src="{{ url_for('static', filename='images/' ~ img) }}" alt="Room" style="width: 100%; height: 100%; object-fit: cover;">
-                                    <form method="POST" action="{{ url_for('delete_image', acc_id=acc.id, image_filename=img) }}" style="position: absolute; top: 0; right: 0; margin: 2px;" onsubmit="return confirm('Delete this image?');">
-                                        <button type="submit" style="background: #c0392b; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; padding: 0; display: flex; align-items: center; justify-content: center;">×</button>
-                                    </form>
                                 </div>
                                 {% endfor %}
                             {% endif %}
@@ -193,11 +172,7 @@
                     </td>
                     <td style="padding: 1rem;">
                         <div style="display: flex; gap: 0.5rem; flex-direction: column;">
-                            <div style="display: flex; gap: 0.25rem;">
-                                <button type="button" onclick="toggleNameEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #3498db; border: none; cursor: pointer; flex: 1;">Edit Name</button>
-                                <button type="button" onclick="togglePriceEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #e67e22; border: none; cursor: pointer; flex: 1;">Edit Price</button>
-                            </div>
-                            <button type="button" onclick="toggleCapacityEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #16a085; border: none; cursor: pointer; width: 100%;">Edit Capacity</button>
+                            <button type="button" onclick="togglePriceEdit({{ acc.id }})" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #e67e22; border: none; cursor: pointer; width: 100%;">Edit Price</button>
                             <form method="POST" action="{{ url_for('toggle_unit', id=acc.id) }}" style="margin: 0;">
                                 {% if acc.is_closed %}
                                 <button type="submit" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #27ae60; border: none; cursor: pointer; width: 100%;">Open Unit</button>
@@ -205,22 +180,7 @@
                                 <button type="submit" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #c0392b; border: none; cursor: pointer; width: 100%;">Close Unit</button>
                                 {% endif %}
                             </form>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="file" id="image_{{ acc.id }}" accept="image/*" style="display: none;">
-                                <button type="button" onclick="document.getElementById('image_{{ acc.id }}').click();" class="btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; background: #9b59b6; border: none; cursor: pointer; width: 100%;">Upload Image</button>
-                                <form method="POST" action="{{ url_for('upload_image', acc_id=acc.id) }}" enctype="multipart/form-data" id="upload_form_{{ acc.id }}" style="display: none;">
-                                    <input type="file" name="image" id="file_{{ acc.id }}" accept="image/*">
-                                </form>
-                            </div>
                         </div>
-                        <script>
-                            document.getElementById('image_{{ acc.id }}').addEventListener('change', function(e) {
-                                if (this.files.length > 0) {
-                                    document.getElementById('file_{{ acc.id }}').files = this.files;
-                                    document.getElementById('upload_form_{{ acc.id }}').submit();
-                                }
-                            });
-                        </script>
                     </td>
                 </tr>
                 {% endfor %}
@@ -229,33 +189,9 @@
     </div>
 
     <script>
-        function toggleNameEdit(accId) {
-            const display = document.getElementById('name_display_' + accId);
-            const form = document.getElementById('name_form_' + accId);
-            if (form.style.display === 'none') {
-                display.style.display = 'none';
-                form.style.display = 'block';
-            } else {
-                display.style.display = 'inline';
-                form.style.display = 'none';
-            }
-        }
-
         function togglePriceEdit(accId) {
             const display = document.getElementById('price_display_' + accId);
             const form = document.getElementById('price_form_' + accId);
-            if (form.style.display === 'none') {
-                display.style.display = 'none';
-                form.style.display = 'block';
-            } else {
-                display.style.display = 'inline';
-                form.style.display = 'none';
-            }
-        }
-
-        function toggleCapacityEdit(accId) {
-            const display = document.getElementById('capacity_display_' + accId);
-            const form = document.getElementById('capacity_form_' + accId);
             if (form.style.display === 'none') {
                 display.style.display = 'none';
                 form.style.display = 'block';

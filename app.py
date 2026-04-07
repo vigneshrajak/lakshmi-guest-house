@@ -168,24 +168,23 @@ with app.app_context():
     if not Accommodation.query.first():
         inventory = [
             # 4 Halls
-            Accommodation(name='Hall 1', type='Hall', description='Our largest hall suitable for weddings and massive gatherings.', price=25000.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=500),
-            Accommodation(name='Hall 2', type='Hall', description='Elegant hall perfect for formal events and corporate dinners.', price=20000.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=300),
-            Accommodation(name='Hall 3', type='Hall', description='Cozy indoor hall for birthdays and small celebrations.', price=15000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=100),
-            Accommodation(name='Hall 4', type='Hall', description='Beautiful outdoor lawn that can be covered for evening functions.', price=18000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=250),
+            Accommodation(name='Hall 1', type='Hall', description='Our largest hall suitable for weddings and massive gatherings.', price=1500.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=15),
+            Accommodation(name='Hall 2', type='Hall', description='Elegant hall perfect for formal events and corporate dinners.', price=2500.0, image_filenames='sample_hall.jpg,sample_hall.jpg,sample_hall.jpg', max_people=25),
+            Accommodation(name='Hall 3', type='Hall', description='Cozy indoor hall for birthdays and small celebrations.', price=4000.0, image_filenames='sample_hall.jpg,sample_hall.jpg', max_people=50),
             
             # 2 Cottages
-            Accommodation(name='Cottage 1', type='Cottage', description='A private and fully furnished cottage explicitly designed for couples.', price=5000.0, image_filenames='sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg', max_people=2, facilities='AC,TV,Heater'),
-            Accommodation(name='Cottage 2', type='Cottage', description='A large cottage featuring two bedrooms, private kitchen, and living room.', price=7500.0, image_filenames='sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg,sample_cottage.jpg', max_people=6, facilities='AC,TV,Heater'),
+            Accommodation(name='Cottage 1', type='Cottage', description='A private and fully furnished cottage explicitly designed for couples.', price=3000.0, image_filenames='cottage1[1].jpeg,cottage1[2].jpeg', max_people=15, facilities='AC,TV,Heater'),
+            Accommodation(name='Cottage 2', type='Cottage', description='A large cottage featuring two bedrooms, private kitchen, and living room.', price=4000.0, image_filenames='cottage2[1].jpeg,cottage2[2].jpeg,cottage2[3].jpeg', max_people=30, facilities='AC,TV,Heater'),
             
             # 8 Rooms
-            Accommodation(name='Room 1', type='Room', description='Compact and comfortable single room.', price=1500.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=1, facilities=None),
-            Accommodation(name='Room 2', type='Room', description='Standard double bed room with basic amenities.', price=2000.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=2, facilities=None),
-            Accommodation(name='Room 3', type='Room', description='Spacious double room with balcony view.', price=2500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2, facilities='AC,TV,Heater'),
-            Accommodation(name='Room 4', type='Room', description='Premium executive room with central air conditioning.', price=3000.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2, facilities='AC,TV,Heater'),
-            Accommodation(name='Room 5', type='Room', description='Large suite with one double bed and two twin beds.', price=4500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=4, facilities='AC,TV,Heater'),
-            Accommodation(name='Room 6', type='Room', description='Luxury premium room with minibar and attached lounge.', price=3500.0, image_filenames='sample_room.jpg,sample_room.jpg,sample_room.jpg', max_people=2, facilities='AC,TV,Heater'),
-            Accommodation(name='Room 7', type='Room', description='Simple AC room perfect for short stays.', price=2200.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=2),
-            Accommodation(name='Room 8', type='Room', description='Economical choice without AC but excellent ventilation.', price=1000.0, image_filenames='sample_room.jpg,sample_room.jpg', max_people=1),
+            Accommodation(name='Room 1', type='Room', description='Compact and comfortable single room.', price=1300.0, image_filenames='room1.jpeg', max_people=4, facilities=None),
+            Accommodation(name='Room 2', type='Room', description='Standard double bed room with basic amenities.', price=1300.0, image_filenames='room2.jpeg', max_people=4, facilities=None),
+            Accommodation(name='Room 3', type='Room', description='Spacious double room with balcony view.', price=1500.0, image_filenames='room3[1].jpeg,room3[2].jpeg', max_people=4, facilities='AC,TV,Heater'),
+            Accommodation(name='Room 4', type='Room', description='Premium executive room with central air conditioning.', price=1500.0, image_filenames='room4[1].jpeg,room4[2].jpeg', max_people=4, facilities='AC,TV,Heater'),
+            Accommodation(name='Room 5', type='Room', description='Large suite with one double bed and two twin beds.', price=1500.0, image_filenames='room5.jpeg', max_people=4, facilities='AC,TV,Heater'),
+            Accommodation(name='Room 6', type='Room', description='Luxury premium room with minibar and attached lounge.', price=1500.0, image_filenames='room6.jpeg', max_people=4, facilities='AC,TV,Heater'),
+            Accommodation(name='Room 7', type='Room', description='Simple AC room perfect for short stays.', price=800.0, image_filenames='room1.jpeg', max_people=4),
+            Accommodation(name='Room 8', type='Room', description='Economical choice without AC but excellent ventilation.', price=800.0, image_filenames='room2.jpeg', max_people=4),
         ]
         db.session.add_all(inventory)
         db.session.commit()
@@ -215,11 +214,17 @@ def index():
         
         available_today = total_units - unavailable_count
         
+        # Use specific images for categories
+        if t == 'Cottage':
+            img_filename = 'cottage2[2].jpeg'
+        else:
+            img_filename = f"sample_{t.lower()}.jpg"
+        
         categories.append({
             'name': t,
             'description': f"Browse our beautiful properties and pick the perfect {t.lower()} for your needs.",
             'available': available_today,
-            'image_filename': f"sample_{t.lower()}.jpg"
+            'image_filename': img_filename
         })
         
     return render_template('index.html', categories=categories)
@@ -442,76 +447,9 @@ def cancel_booking(id):
         flash('Only approved bookings can be cancelled.', 'error')
     return redirect(url_for('owner_dashboard'))
 
-@app.route('/owner/upload_image/<int:acc_id>', methods=['POST'])
-@login_required
-def upload_image(acc_id):
-    accommodation = Accommodation.query.get_or_404(acc_id)
-    
-    if 'image' not in request.files:
-        flash('No image file provided.', 'error')
-        return redirect(url_for('owner_dashboard'))
-    
-    file = request.files['image']
-    
-    if not allowed_file(file.filename):
-        flash('Invalid file type. Allowed: png, jpg, jpeg, gif, webp', 'error')
-        return redirect(url_for('owner_dashboard'))
-    
-    try:
-        filename = save_and_optimize_image(file, acc_id)
-        
-        if not filename:
-            flash('Failed to process image.', 'error')
-            return redirect(url_for('owner_dashboard'))
-        
-        # Add new image to existing images
-        if accommodation.image_filenames:
-            accommodation.image_filenames += ',' + filename
-        else:
-            accommodation.image_filenames = filename
-        
-        db.session.commit()
-        flash(f'Image uploaded successfully for {accommodation.name}!', 'success')
-    except Exception as e:
-        flash(f'Error uploading image: {str(e)}', 'error')
-    
-    return redirect(url_for('owner_dashboard'))
+# Image upload feature removed - images are now static
 
-@app.route('/owner/delete_image/<int:acc_id>/<string:image_filename>', methods=['POST'])
-@login_required
-def delete_image(acc_id, image_filename):
-    accommodation = Accommodation.query.get_or_404(acc_id)
-    
-    if not accommodation.image_filenames:
-        flash('No images to delete.', 'error')
-        return redirect(url_for('owner_dashboard'))
-    
-    try:
-        images = accommodation.image_filenames.split(',')
-        
-        if image_filename not in images:
-            flash('Image not found.', 'error')
-            return redirect(url_for('owner_dashboard'))
-        
-        if len(images) == 1:
-            flash('Cannot delete the last image for a unit.', 'error')
-            return redirect(url_for('owner_dashboard'))
-        
-        # Remove from database
-        images.remove(image_filename)
-        accommodation.image_filenames = ','.join(images)
-        db.session.commit()
-        
-        # Delete file from storage
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        
-        flash('Image deleted successfully!', 'success')
-    except Exception as e:
-        flash(f'Error deleting image: {str(e)}', 'error')
-    
-    return redirect(url_for('owner_dashboard'))
+# Image delete feature removed - images are now static
 
 @app.route('/owner/edit_unit/<int:acc_id>', methods=['POST'])
 @login_required
