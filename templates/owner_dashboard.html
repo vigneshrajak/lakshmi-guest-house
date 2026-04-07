@@ -167,21 +167,15 @@
                         </form>
                     </td>
                     <td style="padding: 1rem;">
-                        <form method="POST" action="{{ url_for('update_facilities', acc_id=acc.id) }}" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
-                                <input type="checkbox" name="ac" value="1" {% if acc.facilities and 'AC' in acc.facilities %}checked{% endif %} style="cursor: pointer;">
-                                AC
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
-                                <input type="checkbox" name="tv" value="1" {% if acc.facilities and 'TV' in acc.facilities %}checked{% endif %} style="cursor: pointer;">
-                                TV
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
-                                <input type="checkbox" name="heater" value="1" {% if acc.facilities and 'Heater' in acc.facilities %}checked{% endif %} style="cursor: pointer;">
-                                Heater
-                            </label>
-                            <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #16a085; border: none; cursor: pointer; width: 100%; margin-top: 0.5rem;">Update</button>
-                        </form>
+                        {% if acc.facilities %}
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                {% for facility in acc.facilities.split(',') %}
+                                <span style="background: #16a085; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem;">{{ facility }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span style="color: var(--text-light); font-size: 0.9rem;">None</span>
+                        {% endif %}
                     </td>
                     <td style="padding: 1rem;">
                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
