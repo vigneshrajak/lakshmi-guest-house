@@ -69,6 +69,7 @@ def login_required(f):
 
 def send_confirmation_email(to_email, name, acc_type, ref, check_in, check_out):
     if not MAIL_PASSWORD:
+        print("⚠️ MAIL_PASSWORD not configured!")
         return False
     
     def send_email_async():
@@ -92,14 +93,19 @@ Lakshmi Guest House Management
 """
             msg.attach(MIMEText(body, 'plain'))
             
+            print(f"📧 Sending confirmation email to {to_email}...")
             server = smtplib.SMTP('smtp.gmail.com', 587)
             server.starttls()
             server.login(sender, MAIL_PASSWORD)
             server.send_message(msg)
             server.quit()
-            print(f"Confirmation email sent to {to_email}")
+            print(f"✅ Confirmation email sent to {to_email}")
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ SMTP Auth Error: Invalid email or password - {e}")
+        except smtplib.SMTPException as e:
+            print(f"❌ SMTP Error: {e}")
         except Exception as e:
-            print(f"Failed to send confirmation email: {e}")
+            print(f"❌ Failed to send confirmation email: {e}")
     
     # Send email in background thread
     thread = Thread(target=send_email_async)
@@ -109,6 +115,7 @@ Lakshmi Guest House Management
 
 def send_rejection_email(to_email, name, acc_type, ref):
     if not MAIL_PASSWORD:
+        print("⚠️ MAIL_PASSWORD not configured!")
         return False
     
     def send_email_async():
@@ -133,14 +140,19 @@ Lakshmi Guest House Management
 """
             msg.attach(MIMEText(body, 'plain'))
             
+            print(f"📧 Sending rejection email to {to_email}...")
             server = smtplib.SMTP('smtp.gmail.com', 587)
             server.starttls()
             server.login(sender, MAIL_PASSWORD)
             server.send_message(msg)
             server.quit()
-            print(f"Rejection email sent to {to_email}")
+            print(f"✅ Rejection email sent to {to_email}")
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ SMTP Auth Error: Invalid email or password - {e}")
+        except smtplib.SMTPException as e:
+            print(f"❌ SMTP Error: {e}")
         except Exception as e:
-            print(f"Failed to send rejection email: {e}")
+            print(f"❌ Failed to send rejection email: {e}")
     
     # Send email in background thread
     thread = Thread(target=send_email_async)
@@ -306,14 +318,10 @@ def book(acc_id):
                 flash(f"Sorry, {accommodation.name} is already booked for these dates.", "error")
                 return redirect(url_for('book', acc_id=acc_id))
 
-            # Generate simple booking reference: Room1, Hall1, Cottage1 format with short UUID suffix for uniqueness
-            # Count bookings with same accommodation type to get sequential number
-            same_type_count = Booking.query.join(Accommodation).filter(
-                Accommodation.type == accommodation.type
-            ).count() + 1
-            # Add 4-char short UUID suffix to ensure uniqueness across all bookings
+            # Generate booking reference using accommodation name for uniqueness
+            # Format: Room3-ABC1, Cottage1-XYZ9, etc.
             short_id = str(uuid.uuid4())[:4].upper()
-            ref = f"{accommodation.type.replace(' ', '')}{same_type_count}-{short_id}"
+            ref = f"{accommodation.name.replace(' ', '')}-{short_id}"
             stay_days = (check_out - check_in).days
             advance = (accommodation.price * stay_days) * 0.30  # 30% advance of total cost
 
