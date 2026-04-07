@@ -10,6 +10,7 @@ from functools import wraps
 from dotenv import load_dotenv
 import uuid
 from werkzeug.utils import secure_filename
+from threading import Thread
 
 load_dotenv() # Load variables from .env if present
 
@@ -69,14 +70,16 @@ def login_required(f):
 def send_confirmation_email(to_email, name, acc_type, ref, check_in, check_out):
     if not MAIL_PASSWORD:
         return False
-        
-    sender = "vicky.fdj31@gmail.com"
-    msg = MIMEMultipart()
-    msg['From'] = sender
-    msg['To'] = to_email
-    msg['Subject'] = f"Booking Confirmed: {acc_type} at Lakshmi Guest House"
     
-    body = f"""Hello {name},
+    def send_email_async():
+        try:
+            sender = "vicky.fdj31@gmail.com"
+            msg = MIMEMultipart()
+            msg['From'] = sender
+            msg['To'] = to_email
+            msg['Subject'] = f"Booking Confirmed: {acc_type} at Lakshmi Guest House"
+            
+            body = f"""Hello {name},
     
 Your booking for {acc_type} has been successfully APPROVED!
 Reference Number: {ref}
@@ -87,30 +90,36 @@ Thank you for choosing Lakshmi Guest House. We look forward to hosting you!
 Best regards,
 Lakshmi Guest House Management
 """
-    msg.attach(MIMEText(body, 'plain'))
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender, MAIL_PASSWORD)
+            server.send_message(msg)
+            server.quit()
+            print(f"Confirmation email sent to {to_email}")
+        except Exception as e:
+            print(f"Failed to send confirmation email: {e}")
     
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(sender, MAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        return True
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-        return False
+    # Send email in background thread
+    thread = Thread(target=send_email_async)
+    thread.daemon = True
+    thread.start()
+    return True
 
 def send_rejection_email(to_email, name, acc_type, ref):
     if not MAIL_PASSWORD:
         return False
-        
-    sender = "vicky.fdj31@gmail.com"
-    msg = MIMEMultipart()
-    msg['From'] = sender
-    msg['To'] = to_email
-    msg['Subject'] = f"Booking Update: {acc_type} at Lakshmi Guest House"
     
-    body = f"""Hello {name},
+    def send_email_async():
+        try:
+            sender = "vicky.fdj31@gmail.com"
+            msg = MIMEMultipart()
+            msg['From'] = sender
+            msg['To'] = to_email
+            msg['Subject'] = f"Booking Update: {acc_type} at Lakshmi Guest House"
+            
+            body = f"""Hello {name},
     
 Your booking for {acc_type} (Ref: {ref}) has unfortunately NOT been approved.
 This is because the required 30% advance payment has not been received.
@@ -122,18 +131,22 @@ Thank you for considering Lakshmi Guest House.
 Best regards,
 Lakshmi Guest House Management
 """
-    msg.attach(MIMEText(body, 'plain'))
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender, MAIL_PASSWORD)
+            server.send_message(msg)
+            server.quit()
+            print(f"Rejection email sent to {to_email}")
+        except Exception as e:
+            print(f"Failed to send rejection email: {e}")
     
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(sender, MAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        return True
-    except Exception as e:
-        print(f"Failed to send rejection email: {e}")
-        return False
+    # Send email in background thread
+    thread = Thread(target=send_email_async)
+    thread.daemon = True
+    thread.start()
+    return True
 
 # --- Models ---
 class Accommodation(db.Model):
