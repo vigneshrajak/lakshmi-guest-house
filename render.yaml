@@ -5,6 +5,8 @@
 env:
   PRODUCTION: "True"
   PYTHON_VERSION: "3.11"
+  OWNER_PASSWORD: "vicky123"
+  MAIL_PASSWORD: "awxbfxzczgiotcpn"
 
 # Build command to install dependencies
 buildCommand: "pip install -r requirements.txt"
