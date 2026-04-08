@@ -3,9 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import secrets
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from functools import wraps
 from dotenv import load_dotenv
 import uuid
@@ -35,7 +34,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 db = SQLAlchemy(app)
 
 OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "vicky123")
-MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "vicky.fdj31@gmail.com")
+
+# Debug logging
+print(f"🔧 OWNER_PASSWORD loaded: {'Yes' if OWNER_PASSWORD else 'No'}")
+print(f"🔧 SENDGRID_API_KEY loaded: {'Yes' if SENDGRID_API_KEY else 'No'}")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -68,18 +72,12 @@ def login_required(f):
     return decorated_function
 
 def send_confirmation_email(to_email, name, acc_type, ref, check_in, check_out):
-    if not MAIL_PASSWORD:
-        print("⚠️ MAIL_PASSWORD not configured!")
+    if not SENDGRID_API_KEY:
+        print("⚠️ SENDGRID_API_KEY not configured!")
         return False
     
     def send_email_async():
         try:
-            sender = "vicky.fdj31@gmail.com"
-            msg = MIMEMultipart()
-            msg['From'] = sender
-            msg['To'] = to_email
-            msg['Subject'] = f"Booking Confirmed: {acc_type} at Lakshmi Guest House"
-            
             body = f"""Hello {name},
     
 Your booking for {acc_type} has been successfully APPROVED!
@@ -91,19 +89,18 @@ Thank you for choosing Lakshmi Guest House. We look forward to hosting you!
 Best regards,
 Lakshmi Guest House Management
 """
-            msg.attach(MIMEText(body, 'plain'))
+            
+            message = Mail(
+                from_email=SENDER_EMAIL,
+                to_emails=to_email,
+                subject=f"Booking Confirmed: {acc_type} at Lakshmi Guest House",
+                plain_text_content=body
+            )
             
             print(f"📧 Sending confirmation email to {to_email}...")
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(sender, MAIL_PASSWORD)
-            server.send_message(msg)
-            server.quit()
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            response = sg.send(message)
             print(f"✅ Confirmation email sent to {to_email}")
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ SMTP Auth Error: Invalid email or password - {e}")
-        except smtplib.SMTPException as e:
-            print(f"❌ SMTP Error: {e}")
         except Exception as e:
             print(f"❌ Failed to send confirmation email: {e}")
     
@@ -114,18 +111,12 @@ Lakshmi Guest House Management
     return True
 
 def send_rejection_email(to_email, name, acc_type, ref):
-    if not MAIL_PASSWORD:
-        print("⚠️ MAIL_PASSWORD not configured!")
+    if not SENDGRID_API_KEY:
+        print("⚠️ SENDGRID_API_KEY not configured!")
         return False
     
     def send_email_async():
         try:
-            sender = "vicky.fdj31@gmail.com"
-            msg = MIMEMultipart()
-            msg['From'] = sender
-            msg['To'] = to_email
-            msg['Subject'] = f"Booking Update: {acc_type} at Lakshmi Guest House"
-            
             body = f"""Hello {name},
     
 Your booking for {acc_type} (Ref: {ref}) has unfortunately NOT been approved.
@@ -138,19 +129,18 @@ Thank you for considering Lakshmi Guest House.
 Best regards,
 Lakshmi Guest House Management
 """
-            msg.attach(MIMEText(body, 'plain'))
+            
+            message = Mail(
+                from_email=SENDER_EMAIL,
+                to_emails=to_email,
+                subject=f"Booking Update: {acc_type} at Lakshmi Guest House",
+                plain_text_content=body
+            )
             
             print(f"📧 Sending rejection email to {to_email}...")
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(sender, MAIL_PASSWORD)
-            server.send_message(msg)
-            server.quit()
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            response = sg.send(message)
             print(f"✅ Rejection email sent to {to_email}")
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"❌ SMTP Auth Error: Invalid email or password - {e}")
-        except smtplib.SMTPException as e:
-            print(f"❌ SMTP Error: {e}")
         except Exception as e:
             print(f"❌ Failed to send rejection email: {e}")
     
