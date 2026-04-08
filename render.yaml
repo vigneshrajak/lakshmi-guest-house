@@ -6,7 +6,7 @@ env:
   PRODUCTION: "True"
   PYTHON_VERSION: "3.11"
   OWNER_PASSWORD: "vicky123"
-  SENDGRID_API_KEY: ""
+  BREVO_API_KEY: ""
   SENDER_EMAIL: "vicky.fdj31@gmail.com"
 
 # Build command to install dependencies

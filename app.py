@@ -3,8 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import secrets
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import requests
 from functools import wraps
 from dotenv import load_dotenv
 import uuid
@@ -34,12 +33,12 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 db = SQLAlchemy(app)
 
 OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "vicky123")
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "vicky.fdj31@gmail.com")
 
 # Debug logging
 print(f"🔧 OWNER_PASSWORD loaded: {'Yes' if OWNER_PASSWORD else 'No'}")
-print(f"🔧 SENDGRID_API_KEY loaded: {'Yes' if SENDGRID_API_KEY else 'No'}")
+print(f"🔧 BREVO_API_KEY loaded: {'Yes' if BREVO_API_KEY else 'No'}")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -72,8 +71,8 @@ def login_required(f):
     return decorated_function
 
 def send_confirmation_email(to_email, name, acc_type, ref, check_in, check_out):
-    if not SENDGRID_API_KEY:
-        print("⚠️ SENDGRID_API_KEY not configured!")
+    if not BREVO_API_KEY:
+        print("⚠️ BREVO_API_KEY not configured!")
         return False
     
     def send_email_async():
@@ -90,29 +89,34 @@ Best regards,
 Lakshmi Guest House Management
 """
             
-            message = Mail(
-                from_email=SENDER_EMAIL,
-                to_emails=to_email,
-                subject=f"Booking Confirmed: {acc_type} at Lakshmi Guest House",
-                plain_text_content=body
+            print(f"📧 Sending confirmation email to {to_email}...")
+            
+            response = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": BREVO_API_KEY},
+                json={
+                    "sender": {"name": "Lakshmi Guest House", "email": SENDER_EMAIL},
+                    "to": [{"email": to_email, "name": name}],
+                    "subject": f"Booking Confirmed: {acc_type} at Lakshmi Guest House",
+                    "textContent": body
+                }
             )
             
-            print(f"📧 Sending confirmation email to {to_email}...")
-            sg = SendGridAPIClient(SENDGRID_API_KEY)
-            response = sg.send(message)
-            print(f"✅ Confirmation email sent to {to_email}")
+            if response.status_code == 201:
+                print(f"✅ Confirmation email sent to {to_email}")
+            else:
+                print(f"❌ Brevo Error: {response.status_code} - {response.text}")
         except Exception as e:
             print(f"❌ Failed to send confirmation email: {e}")
     
-    # Send email in background thread
     thread = Thread(target=send_email_async)
     thread.daemon = True
     thread.start()
     return True
 
 def send_rejection_email(to_email, name, acc_type, ref):
-    if not SENDGRID_API_KEY:
-        print("⚠️ SENDGRID_API_KEY not configured!")
+    if not BREVO_API_KEY:
+        print("⚠️ BREVO_API_KEY not configured!")
         return False
     
     def send_email_async():
@@ -130,21 +134,26 @@ Best regards,
 Lakshmi Guest House Management
 """
             
-            message = Mail(
-                from_email=SENDER_EMAIL,
-                to_emails=to_email,
-                subject=f"Booking Update: {acc_type} at Lakshmi Guest House",
-                plain_text_content=body
+            print(f"📧 Sending rejection email to {to_email}...")
+            
+            response = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": BREVO_API_KEY},
+                json={
+                    "sender": {"name": "Lakshmi Guest House", "email": SENDER_EMAIL},
+                    "to": [{"email": to_email, "name": name}],
+                    "subject": f"Booking Update: {acc_type} at Lakshmi Guest House",
+                    "textContent": body
+                }
             )
             
-            print(f"📧 Sending rejection email to {to_email}...")
-            sg = SendGridAPIClient(SENDGRID_API_KEY)
-            response = sg.send(message)
-            print(f"✅ Rejection email sent to {to_email}")
+            if response.status_code == 201:
+                print(f"✅ Rejection email sent to {to_email}")
+            else:
+                print(f"❌ Brevo Error: {response.status_code} - {response.text}")
         except Exception as e:
             print(f"❌ Failed to send rejection email: {e}")
     
-    # Send email in background thread
     thread = Thread(target=send_email_async)
     thread.daemon = True
     thread.start()
