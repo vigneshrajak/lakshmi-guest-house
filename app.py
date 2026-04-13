@@ -35,10 +35,14 @@ db = SQLAlchemy(app)
 OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "vicky123")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "vicky.fdj31@gmail.com")
+OWNER_PHONE = os.environ.get("OWNER_PHONE", "")  # WhatsApp phone number with country code (e.g., +919876543210)
+OWNER_EMAIL = os.environ.get("OWNER_EMAIL", SENDER_EMAIL)  # Email address where booking notifications are sent
 
 # Debug logging
 print(f"🔧 OWNER_PASSWORD loaded: {'Yes' if OWNER_PASSWORD else 'No'}")
 print(f"🔧 BREVO_API_KEY loaded: {'Yes' if BREVO_API_KEY else 'No'}")
+print(f"🔧 OWNER_PHONE loaded: {'Yes' if OWNER_PHONE else 'No'}")
+print(f"🔧 OWNER_EMAIL loaded: {'Yes' if OWNER_EMAIL else 'No'}")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -155,6 +159,297 @@ Lakshmi Guest House Management
             print(f"❌ Failed to send rejection email: {e}")
     
     thread = Thread(target=send_email_async)
+    thread.daemon = True
+    thread.start()
+    return True
+
+def send_whatsapp_notification_to_owner(guest_name, acc_type, check_in, check_out, booking_ref, guest_phone, guest_email):
+    """Send notification to owner about new pending booking (SMS/WhatsApp via Brevo or Email)"""
+    if not BREVO_API_KEY or not OWNER_PHONE:
+        print("⚠️ BREVO_API_KEY or OWNER_PHONE not configured!")
+        return False
+    
+    def send_notification_async():
+        try:
+            check_in_str = check_in.strftime('%b %d, %Y') if hasattr(check_in, 'strftime') else str(check_in)
+            check_out_str = check_out.strftime('%b %d, %Y') if hasattr(check_out, 'strftime') else str(check_out)
+            
+            message = f"""🔔 NEW BOOKING REQUEST
+
+Guest: {guest_name}
+Phone: {guest_phone}
+Email: {guest_email}
+
+📍 Accommodation: {acc_type}
+📅 Check-in: {check_in_str}
+📅 Check-out: {check_out_str}
+🔖 Ref #: {booking_ref}
+
+⏰ Please approve or reject in dashboard."""
+            
+            print(f"📬 Sending booking notification to owner ({OWNER_PHONE})...")
+            
+            # Try SMS first
+            print(f"📲 Attempting SMS via Brevo...")
+            sms_response = requests.post(
+                "https://api.brevo.com/v3/sms/send",
+                headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json"},
+                json={
+                    "to": OWNER_PHONE,
+                    "sender": "Lakshmi",
+                    "text": message
+                },
+                timeout=10
+            )
+            
+            if sms_response.status_code in [200, 201]:
+                print(f"✅ SMS notification sent to {OWNER_PHONE}")
+                return
+            
+            # Try WhatsApp
+            print(f"📱 Attempting WhatsApp via Brevo...")
+            wa_response = requests.post(
+                "https://api.brevo.com/v3/whatsapp/send",
+                headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json"},
+                json={
+                    "to": OWNER_PHONE,
+                    "type": "text",
+                    "text": message
+                },
+                timeout=10
+            )
+            
+            if wa_response.status_code in [200, 201]:
+                print(f"✅ WhatsApp notification sent to {OWNER_PHONE}")
+                return
+            
+            # Send email notification to owner
+            print(f"📧 Sending booking notification email to owner ({OWNER_EMAIL})...")
+            
+            # Calculate stay duration
+            stay_duration = (check_out - check_in).days if hasattr(check_out, 'day') else 1
+            
+            email_body = f"""Hello Lakshmi Guest House Owner,
+
+You have a NEW BOOKING REQUEST that requires your approval!
+
+========== GUEST INFORMATION ==========
+Name: {guest_name}
+Phone: {guest_phone}
+Email: {guest_email}
+
+========== BOOKING DETAILS ==========
+Accommodation: {acc_type}
+Check-in Date: {check_in_str}
+Check-out Date: {check_out_str}
+Duration: {stay_duration} nights
+Booking Reference: {booking_ref}
+
+========== ACTION REQUIRED ==========
+Please review this booking and APPROVE or REJECT it in your dashboard:
+http://localhost:5000/owner/dashboard
+
+If you have questions, contact the guest:
+Phone: {guest_phone}
+Email: {guest_email}
+
+Best regards,
+Lakshmi Guest House Booking System
+"""
+            
+            html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+        .container {{
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+            margin: -20px -20px 20px -20px;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+        }}
+        .section {{
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }}
+        .section h2 {{
+            margin-top: 0;
+            color: #667eea;
+            font-size: 16px;
+        }}
+        .info-row {{
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }}
+        .info-row:last-child {{
+            border-bottom: none;
+        }}
+        .info-label {{
+            font-weight: bold;
+            color: #555;
+        }}
+        .info-value {{
+            color: #333;
+            text-align: right;
+        }}
+        .cta-button {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }}
+        .footer {{
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }}
+        .highlight {{
+            background: #fffacd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }}
+        .urgent {{
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 NEW BOOKING REQUEST</h1>
+            <p>Action Required - Please Review & Approve</p>
+        </div>
+        
+        <div class="urgent">
+            <strong>⚠️ Action Required:</strong> You have a new booking request from <strong>{guest_name}</strong>. 
+            Please review the details below and take action immediately.
+        </div>
+        
+        <div class="section">
+            <h2>👤 GUEST INFORMATION</h2>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value"><strong>{guest_name}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value"><a href="tel:{guest_phone}" style="color: #667eea; text-decoration: none;">{guest_phone}</a></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value"><a href="mailto:{guest_email}" style="color: #667eea; text-decoration: none;">{guest_email}</a></span>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🏠 BOOKING DETAILS</h2>
+            <div class="info-row">
+                <span class="info-label">Accommodation:</span>
+                <span class="info-value"><strong>{acc_type}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Check-in:</span>
+                <span class="info-value">{check_in_str}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Check-out:</span>
+                <span class="info-value">{check_out_str}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Duration:</span>
+                <span class="info-value"><strong>{stay_duration} night(s)</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Reference:</span>
+                <span class="info-value"><strong style="color: #667eea;">{booking_ref}</strong></span>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="http://localhost:5000/owner/dashboard" class="cta-button">
+                👉 REVIEW & APPROVE / REJECT IN DASHBOARD
+            </a>
+        </div>
+        
+        <div class="section" style="border-left-color: #ff9800;">
+            <h2 style="color: #ff9800;">❓ CONTACT GUEST</h2>
+            <p>If you need to speak with the guest:</p>
+            <p style="margin: 10px 0;">
+                <strong>📞 Phone:</strong> <a href="tel:{guest_phone}" style="color: #667eea; text-decoration: none;">{guest_phone}</a><br>
+                <strong>📧 Email:</strong> <a href="mailto:{guest_email}" style="color: #667eea; text-decoration: none;">{guest_email}</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Lakshmi Guest House</strong></p>
+            <p>Booking Notification System</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>"""
+            
+            email_response = requests.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": BREVO_API_KEY},
+                json={
+                    "sender": {"name": "Lakshmi Guest House", "email": SENDER_EMAIL},
+                    "to": [{"email": OWNER_EMAIL, "name": "Owner"}],
+                    "subject": f"🔔 NEW BOOKING REQUEST: {booking_ref} - {guest_name} - {acc_type}",
+                    "textContent": email_body,
+                    "htmlContent": html_content
+                }
+            )
+            
+            if email_response.status_code in [200, 201]:
+                print(f"✅ Email notification sent to owner ({SENDER_EMAIL})")
+            else:
+                print(f"⚠️ Email also failed: {email_response.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Failed to send notification: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    thread = Thread(target=send_notification_async)
     thread.daemon = True
     thread.start()
     return True
@@ -337,6 +632,17 @@ def book(acc_id):
             )
             db.session.add(new_booking)
             db.session.commit()
+            
+            # Send WhatsApp notification to owner about new booking
+            send_whatsapp_notification_to_owner(
+                guest_name=guest_name,
+                acc_type=accommodation.name,
+                check_in=check_in,
+                check_out=check_out,
+                booking_ref=ref,
+                guest_phone=phone,
+                guest_email=email
+            )
             
             return redirect(url_for('success', name=guest_name, type=accommodation.name, ref=ref, advance=advance, phone=phone, email=email, check_in=check_in_str, check_out=check_out_str))
             
