@@ -37,12 +37,14 @@ BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "vicky.fdj31@gmail.com")
 OWNER_PHONE = os.environ.get("OWNER_PHONE", "")  # WhatsApp phone number with country code (e.g., +919876543210)
 OWNER_EMAIL = os.environ.get("OWNER_EMAIL", SENDER_EMAIL)  # Email address where booking notifications are sent
+APP_URL = os.environ.get("APP_URL", "http://localhost:5000")  # Base URL for production deployment
 
 # Debug logging
 print(f"🔧 OWNER_PASSWORD loaded: {'Yes' if OWNER_PASSWORD else 'No'}")
 print(f"🔧 BREVO_API_KEY loaded: {'Yes' if BREVO_API_KEY else 'No'}")
 print(f"🔧 OWNER_PHONE loaded: {'Yes' if OWNER_PHONE else 'No'}")
 print(f"🔧 OWNER_EMAIL loaded: {'Yes' if OWNER_EMAIL else 'No'}")
+print(f"🔧 APP_URL: {APP_URL}")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -247,7 +249,7 @@ Booking Reference: {booking_ref}
 
 ========== ACTION REQUIRED ==========
 Please review this booking and APPROVE or REJECT it in your dashboard:
-http://localhost:5000/owner/dashboard
+{APP_URL}/owner/dashboard
 
 If you have questions, contact the guest:
 Phone: {guest_phone}
@@ -404,7 +406,7 @@ Lakshmi Guest House Booking System
         </div>
         
         <div style="text-align: center;">
-            <a href="http://localhost:5000/owner/dashboard" class="cta-button">
+            <a href="{APP_URL}/owner/dashboard" class="cta-button">
                 👉 REVIEW & APPROVE / REJECT IN DASHBOARD
             </a>
         </div>
@@ -436,13 +438,19 @@ Lakshmi Guest House Booking System
                     "subject": f"🔔 NEW BOOKING REQUEST: {booking_ref} - {guest_name} - {acc_type}",
                     "textContent": email_body,
                     "htmlContent": html_content
-                }
+                },
+                timeout=15
             )
             
+            print(f"📊 Email Response Status: {email_response.status_code}")
+            
             if email_response.status_code in [200, 201]:
-                print(f"✅ Email notification sent to owner ({SENDER_EMAIL})")
+                print(f"✅ Email notification sent successfully to {OWNER_EMAIL}")
+                return True
             else:
-                print(f"⚠️ Email also failed: {email_response.status_code}")
+                print(f"❌ Email send failed: {email_response.status_code}")
+                print(f"📋 Response: {email_response.text}")
+                return False
                 
         except Exception as e:
             print(f"❌ Failed to send notification: {e}")
