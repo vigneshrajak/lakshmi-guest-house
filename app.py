@@ -244,6 +244,10 @@ Lakshmi Guest House
                 <strong>⚠️ Action Required:</strong> You have a new booking from <strong>{guest_name}</strong>. Please review and take action.
             </div>
             
+            <div class="cta" style="margin-bottom: 30px;">
+                <a href="https://lakshmi-guest-house.onrender.com/login" class="btn">🔐 LOGIN TO DASHBOARD</a>
+            </div>
+            
             <div class="section">
                 <div class="section-title">👤 Guest Information</div>
                 <div class="info-item">
