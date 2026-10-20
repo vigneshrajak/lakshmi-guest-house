@@ -3,12 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
 import secrets
-import requests
 from functools import wraps
 from dotenv import load_dotenv
-import uuid
-from werkzeug.utils import secure_filename
-from threading import Thread
 
 load_dotenv() # Load variables from .env if present
 
@@ -33,18 +29,11 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 db = SQLAlchemy(app)
 
 OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "vicky123")
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "vicky.fdj31@gmail.com")
-OWNER_PHONE = os.environ.get("OWNER_PHONE", "")  # WhatsApp phone number with country code (e.g., +919876543210)
-OWNER_EMAIL = os.environ.get("OWNER_EMAIL", SENDER_EMAIL)  # Email address where booking notifications are sent
-APP_URL = os.environ.get("APP_URL", "http://localhost:5000")  # Base URL for production deployment
+OWNER_PHONE = os.environ.get("OWNER_PHONE", "9894081508")
 
 # Debug logging
 print(f"🔧 OWNER_PASSWORD loaded: {'Yes' if OWNER_PASSWORD else 'No'}")
-print(f"🔧 BREVO_API_KEY loaded: {'Yes' if BREVO_API_KEY else 'No'}")
 print(f"🔧 OWNER_PHONE loaded: {'Yes' if OWNER_PHONE else 'No'}")
-print(f"🔧 OWNER_EMAIL loaded: {'Yes' if OWNER_EMAIL else 'No'}")
-print(f"🔧 APP_URL: {APP_URL}")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -75,264 +64,6 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
-
-def send_confirmation_email(to_email, name, acc_type, ref, check_in, check_out):
-    if not BREVO_API_KEY:
-        print("⚠️ BREVO_API_KEY not configured!")
-        return False
-    
-    def send_email_async():
-        try:
-            body = f"""Hello {name},
-    
-Your booking for {acc_type} has been successfully APPROVED!
-Reference Number: {ref}
-Dates: {check_in.strftime('%b %d, %Y')} to {check_out.strftime('%b %d, %Y')}
-
-Thank you for choosing Lakshmi Guest House. We look forward to hosting you!
-
-Best regards,
-Lakshmi Guest House Management
-"""
-            
-            print(f"📧 Sending confirmation email to {to_email}...")
-            
-            response = requests.post(
-                "https://api.brevo.com/v3/smtp/email",
-                headers={"api-key": BREVO_API_KEY},
-                json={
-                    "sender": {"name": "Lakshmi Guest House", "email": SENDER_EMAIL},
-                    "to": [{"email": to_email, "name": name}],
-                    "subject": f"Booking Confirmed: {acc_type} at Lakshmi Guest House",
-                    "textContent": body
-                }
-            )
-            
-            if response.status_code == 201:
-                print(f"✅ Confirmation email sent to {to_email}")
-            else:
-                print(f"❌ Brevo Error: {response.status_code} - {response.text}")
-        except Exception as e:
-            print(f"❌ Failed to send confirmation email: {e}")
-    
-    thread = Thread(target=send_email_async)
-    thread.daemon = True
-    thread.start()
-    return True
-
-def send_rejection_email(to_email, name, acc_type, ref):
-    if not BREVO_API_KEY:
-        print("⚠️ BREVO_API_KEY not configured!")
-        return False
-    
-    def send_email_async():
-        try:
-            body = f"""Hello {name},
-    
-Your booking for {acc_type} (Ref: {ref}) has unfortunately NOT been approved.
-This is because the required 30% advance payment has not been received.
-
-If you have any questions or would like to make the payment and recreate the booking, please contact us.
-
-Thank you for considering Lakshmi Guest House.
-
-Best regards,
-Lakshmi Guest House Management
-"""
-            
-            print(f"📧 Sending rejection email to {to_email}...")
-            
-            response = requests.post(
-                "https://api.brevo.com/v3/smtp/email",
-                headers={"api-key": BREVO_API_KEY},
-                json={
-                    "sender": {"name": "Lakshmi Guest House", "email": SENDER_EMAIL},
-                    "to": [{"email": to_email, "name": name}],
-                    "subject": f"Booking Update: {acc_type} at Lakshmi Guest House",
-                    "textContent": body
-                }
-            )
-            
-            if response.status_code == 201:
-                print(f"✅ Rejection email sent to {to_email}")
-            else:
-                print(f"❌ Brevo Error: {response.status_code} - {response.text}")
-        except Exception as e:
-            print(f"❌ Failed to send rejection email: {e}")
-    
-    thread = Thread(target=send_email_async)
-    thread.daemon = True
-    thread.start()
-    return True
-
-def send_owner_booking_notification(guest_name, acc_type, check_in, check_out, booking_ref, guest_phone, guest_email):
-    """Send email notification to owner about new pending booking"""
-    if not BREVO_API_KEY or not OWNER_EMAIL:
-        print("⚠️ BREVO_API_KEY or OWNER_EMAIL not configured!")
-        return False
-    
-    def send_email_async():
-        try:
-            check_in_str = check_in.strftime('%b %d, %Y') if hasattr(check_in, 'strftime') else str(check_in)
-            check_out_str = check_out.strftime('%b %d, %Y') if hasattr(check_out, 'strftime') else str(check_out)
-            stay_duration = (check_out - check_in).days if hasattr(check_out, 'day') else 1
-            
-            print(f"📧 Sending booking notification to owner ({OWNER_EMAIL})...")
-            
-            email_body = f"""Hello Lakshmi Guest House Owner,
-
-NEW BOOKING REQUEST - ACTION REQUIRED!
-
-GUEST INFORMATION:
-Name: {guest_name}
-Phone: {guest_phone}
-Email: {guest_email}
-
-BOOKING DETAILS:
-Accommodation: {acc_type}
-Check-in: {check_in_str}
-Check-out: {check_out_str}
-Duration: {stay_duration} nights
-Reference: {booking_ref}
-
-ACTION REQUIRED:
-Please review this booking and APPROVE or REJECT it in your dashboard:
-{APP_URL}/owner/dashboard
-
-Contact Guest:
-Phone: {guest_phone}
-Email: {guest_email}
-
-Best regards,
-Lakshmi Guest House
-"""
-            
-            html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }}
-        .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }}
-        .header h1 {{ font-size: 28px; margin-bottom: 5px; }}
-        .header p {{ font-size: 14px; opacity: 0.9; }}
-        .content {{ padding: 30px; }}
-        .alert {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; }}
-        .alert strong {{ color: #856404; }}
-        .section {{ margin: 25px 0; }}
-        .section-title {{ font-size: 16px; font-weight: bold; color: #667eea; margin-bottom: 12px; border-bottom: 2px solid #667eea; padding-bottom: 8px; }}
-        .info-item {{ display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }}
-        .info-item:last-child {{ border-bottom: none; }}
-        .label {{ font-weight: bold; color: #555; }}
-        .value {{ color: #333; text-align: right; }}
-        .cta {{ text-align: center; margin: 30px 0; }}
-        .btn {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; }}
-        .btn:hover {{ opacity: 0.9; }}
-        .footer {{ background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔔 NEW BOOKING REQUEST</h1>
-            <p>Action Required - Please Review</p>
-        </div>
-        
-        <div class="content">
-            <div class="alert">
-                <strong>⚠️ Action Required:</strong> You have a new booking from <strong>{guest_name}</strong>. Please review and take action.
-            </div>
-            
-            <div class="cta" style="margin-bottom: 30px;">
-                <a href="https://lakshmi-guest-house.onrender.com/login" class="btn">🔐 LOGIN TO DASHBOARD</a>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">👤 Guest Information</div>
-                <div class="info-item">
-                    <span class="label">Name:</span>
-                    <span class="value">{guest_name}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Phone:</span>
-                    <span class="value"><a href="tel:{guest_phone}" style="color: #667eea; text-decoration: none;">{guest_phone}</a></span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Email:</span>
-                    <span class="value"><a href="mailto:{guest_email}" style="color: #667eea; text-decoration: none;">{guest_email}</a></span>
-                </div>
-            </div>
-            
-            <div class="section">
-                <div class="section-title">🏠 Booking Details</div>
-                <div class="info-item">
-                    <span class="label">Accommodation:</span>
-                    <span class="value"><strong>{acc_type}</strong></span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Check-in:</span>
-                    <span class="value">{check_in_str}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Check-out:</span>
-                    <span class="value">{check_out_str}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Duration:</span>
-                    <span class="value"><strong>{stay_duration} night(s)</strong></span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Reference:</span>
-                    <span class="value"><strong style="color: #667eea;">{booking_ref}</strong></span>
-                </div>
-            </div>
-            
-            <div class="cta">
-                <a href="{APP_URL}/owner/dashboard" class="btn">👉 APPROVE/REJECT IN DASHBOARD</a>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p><strong>Lakshmi Guest House</strong> - Booking Notification</p>
-            <p>Automated message. Do not reply to this email.</p>
-        </div>
-    </div>
-</body>
-</html>"""
-            
-            response = requests.post(
-                "https://api.brevo.com/v3/smtp/email",
-                headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json"},
-                json={
-                    "sender": {"name": "Lakshmi Guest House", "email": SENDER_EMAIL},
-                    "to": [{"email": OWNER_EMAIL, "name": "Owner"}],
-                    "subject": f"🔔 NEW BOOKING: {booking_ref} - {guest_name}",
-                    "textContent": email_body,
-                    "htmlContent": html_content
-                },
-                timeout=15
-            )
-            
-            print(f"📊 Response: {response.status_code}")
-            
-            if response.status_code in [200, 201]:
-                print(f"✅ Email sent successfully to {OWNER_EMAIL}")
-                return True
-            else:
-                print(f"❌ Email failed: {response.status_code} - {response.text}")
-                return False
-                
-        except Exception as e:
-            print(f"❌ Error sending email: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
-    
-    thread = Thread(target=send_email_async)
-    thread.daemon = True
-    thread.start()
-    return True
 
 # --- Models ---
 class Accommodation(db.Model):
@@ -448,101 +179,15 @@ def category_view(acc_type):
         
     return render_template('category.html', accommodations=accommodations, acc_type=acc_type)
 
-@app.route('/book/<int:acc_id>', methods=['GET', 'POST'])
+@app.route('/book/<int:acc_id>')
 def book(acc_id):
     accommodation = Accommodation.query.get_or_404(acc_id)
     
     if accommodation.is_closed:
         flash(f"Sorry, {accommodation.name} is currently closed and unavailable for booking.", "error")
         return redirect(url_for('index'))
-        
-    if request.method == 'POST':
-        guest_name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        check_in_str = request.form.get('check_in')
-        check_out_str = request.form.get('check_out')
 
-        try:
-            check_in = datetime.strptime(check_in_str, '%Y-%m-%d').date()
-            check_out = datetime.strptime(check_out_str, '%Y-%m-%d').date()
-            today = datetime.now().date()
-            
-            if check_in < today:
-                flash("Check-in date cannot be in the past.", "error")
-                return redirect(url_for('book', acc_id=acc_id))
-                
-            if check_in >= check_out:
-                flash("Check-out date must be after check-in date.", "error")
-                return redirect(url_for('book', acc_id=acc_id))
-            
-            if accommodation.is_closed:
-                flash(f"Sorry, {accommodation.name} is currently closed and unavailable.", "error")
-                return redirect(url_for('book', acc_id=acc_id))
-            
-            # 1-to-1 Availability Check (Only considering Approved bookings)
-            overlapping_approved = Booking.query.filter(
-                Booking.accommodation_id == acc_id,
-                Booking.status == 'Approved',
-                Booking.check_in < check_out,
-                Booking.check_out > check_in
-            ).first()
-
-            if overlapping_approved:
-                flash(f"Sorry, {accommodation.name} is already booked for these dates.", "error")
-                return redirect(url_for('book', acc_id=acc_id))
-
-            # Generate booking reference using accommodation name for uniqueness
-            # Format: Room3-ABC1, Cottage1-XYZ9, etc.
-            short_id = str(uuid.uuid4())[:4].upper()
-            ref = f"{accommodation.name.replace(' ', '')}-{short_id}"
-            stay_days = (check_out - check_in).days
-            advance = (accommodation.price * stay_days) * 0.30  # 30% advance of total cost
-
-            new_booking = Booking(
-                accommodation_id=acc_id,
-                guest_name=guest_name,
-                email=email,
-                phone=phone,
-                check_in=check_in,
-                check_out=check_out,
-                booking_ref=ref,
-                advance_amount=advance,
-                status='Pending'
-            )
-            db.session.add(new_booking)
-            db.session.commit()
-            
-            # Send email notification to owner about new booking
-            send_owner_booking_notification(
-                guest_name=guest_name,
-                acc_type=accommodation.name,
-                check_in=check_in,
-                check_out=check_out,
-                booking_ref=ref,
-                guest_phone=phone,
-                guest_email=email
-            )
-            
-            return redirect(url_for('success', name=guest_name, type=accommodation.name, ref=ref, advance=advance, phone=phone, email=email, check_in=check_in_str, check_out=check_out_str))
-            
-        except ValueError:
-            flash("Invalid date format.", "error")
-            return redirect(url_for('book', acc_id=acc_id))
-            
-    return render_template('book.html', accommodation=accommodation)
-
-@app.route('/success')
-def success():
-    name = request.args.get('name', 'Guest')
-    acc_type = request.args.get('type', 'Accommodation')
-    ref = request.args.get('ref', 'UNKNOWN')
-    advance = request.args.get('advance', '0.0')
-    phone = request.args.get('phone', '')
-    email = request.args.get('email', '')
-    check_in = request.args.get('check_in', '')
-    check_out = request.args.get('check_out', '')
-    return render_template('success.html', name=name, acc_type=acc_type, ref=ref, advance=advance, phone=phone, email=email, check_in=check_in, check_out=check_out)
+    return render_template('book.html', accommodation=accommodation, owner_phone=OWNER_PHONE)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -609,11 +254,7 @@ def approve_booking(id):
         
     db.session.commit()
     
-    # Send email
-    if send_confirmation_email(booking.email, booking.guest_name, booking.accommodation.name, booking.booking_ref, booking.check_in, booking.check_out):
-        flash(f'Booking #{booking.booking_ref} approved and email sent successfully!', 'success')
-    else:
-        flash(f'Booking #{booking.booking_ref} approved BUT email failed to send (check MAIL_PASSWORD).', 'success')
+    flash(f'Booking #{booking.booking_ref} approved.', 'success')
         
     return redirect(url_for('owner_dashboard'))
 
@@ -623,11 +264,8 @@ def reject_booking(id):
     booking = Booking.query.get_or_404(id)
     booking.status = 'Rejected'
     db.session.commit()
-    
-    if send_rejection_email(booking.email, booking.guest_name, booking.accommodation.name, booking.booking_ref):
-        flash(f'Booking #{booking.booking_ref} rejected and email notification sent.', 'success')
-    else:
-        flash(f'Booking #{booking.booking_ref} rejected (email failed to send).', 'success')
+
+    flash(f'Booking #{booking.booking_ref} rejected.', 'success')
         
     return redirect(url_for('owner_dashboard'))
 

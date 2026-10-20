@@ -49,7 +49,7 @@
             {% elif not acc.is_available_today %}
                 <button class="btn" disabled style="background: var(--text-light); cursor: not-allowed; opacity: 0.7;">Already Booked</button>
             {% else %}
-                <a href="{{ url_for('book', acc_id=acc.id) }}" class="btn">Select & Book</a>
+                <a href="{{ url_for('book', acc_id=acc.id) }}" class="btn">View Photos & Call to Book</a>
             {% endif %}
         </div>
     </div>

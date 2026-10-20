@@ -1,79 +1,40 @@
 {% extends 'base.html' %}
-{% block title %}Book {{ accommodation.name }} | Lakshmi Guest House{% endblock %}
+{% block title %}{{ accommodation.name }} | Lakshmi Guest House{% endblock %}
 {% block content %}
-<div class="form-container" style="max-width: 800px;">
-    <h2>Book {{ accommodation.name }}</h2>
-    <div style="font-weight: bold; font-size: 1.25rem; color: var(--primary-color); margin-bottom: 1rem;">Price: ₹{{ "%.0f"|format(accommodation.price) }} / day</div>
-    
+<div class="form-container room-details-container">
+    <h2>{{ accommodation.name }}</h2>
+    <div class="price-tag">₹{{ "%.0f"|format(accommodation.price) }} <span>/ day</span></div>
+
     {% if accommodation.max_people %}
-    <div style="padding: 1rem; background: rgba(52, 152, 219, 0.1); border-radius: 6px; margin-bottom: 1.5rem; border-left: 4px solid #3498db;">
-        <div style="color: #2c3e50; font-size: 0.95rem;">
-            <strong style="color: #3498db;">Capacity:</strong> This {{ accommodation.type.lower() }} can accommodate up to <strong style="color: #3498db;">{{ accommodation.max_people }} {{ 'person' if accommodation.max_people == 1 else 'people' }}</strong>
-        </div>
+    <div class="room-info capacity-info">
+        <strong>Capacity:</strong> This {{ accommodation.type.lower() }} can accommodate up to
+        <strong>{{ accommodation.max_people }} {{ 'person' if accommodation.max_people == 1 else 'people' }}</strong>.
     </div>
     {% endif %}
-    
+
     {% if accommodation.facilities %}
-    <div style="padding: 1rem; background: rgba(46, 204, 113, 0.1); border-radius: 6px; margin-bottom: 1.5rem; border-left: 4px solid #27ae60;">
-        <div style="color: #27ae60; font-size: 0.95rem;">
-            <strong style="color: #27ae60;">Available Facilities:</strong>
-            <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
-                {% if 'AC' in accommodation.facilities %}<span style="background: #27ae60; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: bold;">❄️ Air Conditioning</span>{% endif %}
-                {% if 'TV' in accommodation.facilities %}<span style="background: #27ae60; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: bold;">📺 Television</span>{% endif %}
-                {% if 'Heater' in accommodation.facilities %}<span style="background: #27ae60; color: white; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: bold;">🔥 Heater</span>{% endif %}
-            </div>
+    <div class="room-info facilities-info">
+        <strong>Available Facilities:</strong>
+        <div class="facility-list">
+            {% if 'AC' in accommodation.facilities %}<span>❄️ Air Conditioning</span>{% endif %}
+            {% if 'TV' in accommodation.facilities %}<span>📺 Television</span>{% endif %}
+            {% if 'Heater' in accommodation.facilities %}<span>🔥 Heater</span>{% endif %}
         </div>
     </div>
     {% endif %}
-    
-    <!-- Image Gallery -->
-    <div style="display: flex; gap: 1rem; overflow-x: auto; margin-bottom: 2rem; padding-bottom: 0.5rem;">
+
+    <div class="room-gallery" aria-label="{{ accommodation.name }} photos">
         {% for img in accommodation.image_filenames.split(',') %}
-        <img src="{{ url_for('static', filename='images/' ~ img) }}" alt="{{ accommodation.name }}" style="height: 200px; border-radius: 8px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <img src="{{ url_for('static', filename='images/' ~ img) }}" alt="{{ accommodation.name }} photo {{ loop.index }}">
         {% endfor %}
     </div>
 
-    <p style="color: var(--text-light); margin-bottom: 2rem;">Fill out the details below to secure your {{ accommodation.type }}.</p>
-    
-    <form method="POST">
-        <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" required placeholder="John Doe">
-        </div>
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" required placeholder="john@example.com">
-        </div>
-        <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" required placeholder="+91 98765 43210">
-        </div>
-        <div class="date-group">
-            <div class="form-group">
-                <label for="check_in">Check-in Date</label>
-                <input type="date" id="check_in" name="check_in" required>
-            </div>
-            <div class="form-group">
-                <label for="check_out">Check-out Date</label>
-                <input type="date" id="check_out" name="check_out" required>
-            </div>
-        </div>
-        
-        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-            <button type="submit" class="btn" style="flex: 1;">Confirm Booking</button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
-        </div>
-    </form>
-</div>
+    <div class="call-to-book">
+        <h3>Interested in booking?</h3>
+        <p>Call the owner directly to check your dates and book this {{ accommodation.type.lower() }}.</p>
+        <a href="tel:{{ owner_phone }}" class="btn">📞 Call {{ owner_phone }}</a>
+    </div>
 
-<script>
-    // Simple script to set min date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('check_in').setAttribute('min', today);
-    document.getElementById('check_out').setAttribute('min', today);
-    
-    document.getElementById('check_in').addEventListener('change', function() {
-        document.getElementById('check_out').setAttribute('min', this.value);
-    });
-</script>
+    <a href="{{ url_for('category_view', acc_type=accommodation.type) }}" class="btn btn-secondary">Back to {{ accommodation.type }}s</a>
+</div>
 {% endblock %}
